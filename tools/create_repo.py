@@ -4,20 +4,27 @@
 # some sort of history
 
 
-import os
+import os,sys
 from stat import *
 from datetime import date
 
-versions = os.popen("ls -1tr | grep gz").read().split()
+if len(sys.argv)>2:
+    # We're importing one or more tar files from the command line
+    # Usage: create_repo.py <repo directory> <gzipped archives>+
+    repo=sys.argv[1]
+    versions=sys.argv[2:]
+else:
+    # no files specified, so we're starting from scratch and
+    # importing all the gz files from the current directory
+    repo = "tmp-kegs"
+    versions = os.popen("ls -1tr | grep gz").read().split()
 
-repo = "tmp-kegs"
+    # Danger ... this is dangerous!
 
-# Danger ... this is dangerous!
+    os.system("rm -rf "+repo)
 
-os.system("rm -rf "+repo)
-
-# Create a git repository and initialize it:
-os.system("git init "+repo)
+    # Create a git repository and initialize it:
+    os.system("git init "+repo)
 
 # All of these are authored by Kent, so, we'll set things up as though
 # we are him, at least locally.

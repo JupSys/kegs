@@ -1,8 +1,8 @@
-const char rcsid_mockingboard_c[] = "@(#)$KmKId: mockingboard.c,v 1.22 2021-07-03 19:15:20+00 kentd Exp $";
+const char rcsid_mockingboard_c[] = "@(#)$KmKId: mockingboard.c,v 1.23 2023-03-19 15:27:39+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2021 by Kent Dickey		*/
+/*			Copyright 2002-2023 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -39,7 +39,7 @@ mock_ay8913_reset(int pair_num, double dcycs)
 		// Avoid unused parameter warning
 	}
 	ay8913ptr = &(g_mockingboard.pair[pair_num].ay8913);
-	ay8913ptr->reg_addr_latch = 0;
+	ay8913ptr->reg_addr_latch = 16;		// out-of-range, mb-audit1.3
 	for(i = 0; i < 16; i++) {
 		ay8913ptr->regs[i] = 0;
 	}

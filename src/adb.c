@@ -1,4 +1,4 @@
-const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.106 2022-02-09 05:34:42+00 kentd Exp $";
+const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.107 2023-03-20 12:49:49+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -89,6 +89,7 @@ word32 g_adb_mode = 0;		/* mode set via set_modes, clear_modes */
 int g_warp_pointer = 0;
 int g_hide_pointer = 0;
 int g_unhide_pointer = 0;
+int	g_adb_copy_requested = 0;
 
 int g_mouse_a2_x = 0;
 int g_mouse_a2_y = 0;
@@ -318,6 +319,16 @@ adb_get_hide_warp_info(Kimage *kimage_ptr, int *warpptr)
 	}
 	*warpptr = 0;
 	return 0;
+}
+
+int
+adb_get_copy_requested()
+{
+	int	ret;
+
+	ret = g_adb_copy_requested;
+	g_adb_copy_requested = 0;
+	return ret;
 }
 
 void
@@ -2051,7 +2062,9 @@ adb_physical_key_update(Kimage *kimage_ptr, int a2code, word32 unicode_c,
 								g_hide_pointer);
 			break;
 		case 0x09: /* F9 - swap paddles */
-			if(SHIFT_DOWN) {
+			if(CTRL_DOWN) {
+				g_adb_copy_requested = 1;
+			} else if(SHIFT_DOWN) {
 				g_swap_paddles = !g_swap_paddles;
 				printf("Swap paddles is now: %d\n",
 							g_swap_paddles);

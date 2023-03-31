@@ -1,4 +1,4 @@
-const char rcsid_video_c[] = "@(#)$KmKId: video.c,v 1.190 2023-03-09 22:38:44+00 kentd Exp $";
+const char rcsid_video_c[] = "@(#)$KmKId: video.c,v 1.191 2023-03-31 21:47:45+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -629,7 +629,8 @@ video_all_stat_to_line_stat(int line, int new_all_stat)
 
 	altchar = 0; text_color = 0; bg_color = 0; flash_state = 0;
 
-	voc_interlace = (new_all_stat >> BIT_ALL_STAT_VOC_INTERLACE) & 1;
+	voc_interlace = ((new_all_stat >> BIT_ALL_STAT_VOC_INTERLACE) & 1) |
+		(((new_all_stat >> BIT_ALL_STAT_VOC_MAIN) & 1) << 1);
 	if(new_all_stat & ALL_STAT_SUPER_HIRES) {
 		mode = MODE_SUPER_HIRES;
 		page = 0; dbl = 0; color = 0;
@@ -1446,7 +1447,8 @@ video_rebuild_super_hires_palette(int bank, word32 scan_info, int line,
 		g_palette_change_cnt[bank][palette]++;
 	}
 
-	word_ptr = (word32 *)&(g_slow_memory_ptr[0x19e00 + palette*0x20]);
+	word_ptr = (word32 *)&(g_slow_memory_ptr[(bank << 16) + 0x9e00 +
+							palette*0x20]);
 	for(j = 0; j < 8; j++) {
 		if(word_ptr[j] != g_saved_line_palettes[bank][line][j]) {
 			diffs = 1;
@@ -1637,10 +1639,10 @@ void
 redraw_changed_super_hires(int voc_interlace, int start_line, int reparse,
 					word32 *wptr, int pixels_per_line)
 {
-	int	left, right;
+	int	left, right, bank;
 
 	wptr += start_line*2*pixels_per_line;
-	if(voc_interlace) {
+	if(voc_interlace & 1) {
 		// Do 400 interlaced lines.  Do aux first, then main mem
 		redraw_changed_super_hires_bank(1, start_line, reparse, wptr,
 									0);
@@ -1655,7 +1657,11 @@ redraw_changed_super_hires(int voc_interlace, int start_line, int reparse,
 			g_a2_line_right_edge[start_line] = right;
 		}
 	} else {
-		redraw_changed_super_hires_bank(1, start_line, reparse, wptr,
+		bank = 1;
+		if(voc_interlace & 2) {		// VOC SHR in main memory
+			bank = 0;
+		}
+		redraw_changed_super_hires_bank(bank, start_line, reparse, wptr,
 							pixels_per_line);
 	}
 }
@@ -1841,7 +1847,7 @@ video_refresh_line(int line, int must_reparse)
 		break;
 	case MODE_SUPER_HIRES:
 		g_num_lines_superhires++;
-		redraw_changed_super_hires((stat >> 16) & 1, line, must_reparse,
+		redraw_changed_super_hires((stat >> 16) & 3, line, must_reparse,
 							wptr, pixels_per_line);
 		break;
 	case MODE_BORDER:

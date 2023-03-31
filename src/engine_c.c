@@ -1,4 +1,4 @@
-const char rcsid_engine_c_c[] = "@(#)$KmKId: engine_c.c,v 1.89 2023-02-26 17:46:34+00 kentd Exp $";
+const char rcsid_engine_c_c[] = "@(#)$KmKId: engine_c.c,v 1.90 2023-03-31 21:49:10+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -14,19 +14,9 @@ const char rcsid_engine_c_c[] = "@(#)$KmKId: engine_c.c,v 1.89 2023-02-26 17:46:
 
 #include "defc.h"
 
-// PSR[7:0] is NVMXDIZC
+// PSR[8:0] is E_NVMX_DIZC
 
-#if 0
-/* define FCYCS_PTR_FCYCLES_ROUND_SLOW to get accurate 1MHz write to slow mem*/
-/*  this might help joystick emulation in some Apple //gs games like */
-/*  Madness */
-# define FCYCS_PTR_FCYCLES_ROUND_SLOW	FCYCLES_ROUND; *fcycs_ptr = fcycles;
-#endif
-
-#ifndef FCYCS_PTR_FCYCLES_ROUND_SLOW
-# define FCYCS_PTR_FCYCLES_ROUND_SLOW
-#endif
-
+extern int g_limit_speed;
 extern int g_halt_sim;
 extern int g_engine_recalc_event;
 extern int g_code_red;
@@ -425,7 +415,10 @@ set_memory8_io_stub(word32 addr, word32 val, byte *stat, double *fcycs_ptr,
 		*fcycs_ptr = fcycles;
 		set_memory_io((addr), val, fcycs_ptr);
 	} else if(wstat & (1 << (31 - BANK_SHADOW_BIT))) {
-		FCYCS_PTR_FCYCLES_ROUND_SLOW;
+		if(g_limit_speed) {
+			FCYCLES_ROUND;
+			*fcycs_ptr = fcycles;
+		}
 		tmp1 = (addr & 0xffff);
 		setmem_tmp1 = g_slow_memory_ptr[tmp1];
 		*ptr = val;
@@ -435,7 +428,10 @@ set_memory8_io_stub(word32 addr, word32 val, byte *stat, double *fcycs_ptr,
 				(1U << ((tmp1 >> SHIFT_PER_CHANGE) & 31));
 		}
 	} else if(wstat & (1 << (31 - BANK_SHADOW2_BIT))) {
-		FCYCS_PTR_FCYCLES_ROUND_SLOW;
+		if(g_limit_speed) {
+			FCYCLES_ROUND;
+			*fcycs_ptr = fcycles;
+		}
 		tmp2 = (addr & 0xffff);
 		tmp1 = 0x10000 + tmp2;
 		setmem_tmp1 = g_slow_memory_ptr[tmp1];

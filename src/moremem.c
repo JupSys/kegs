@@ -1,4 +1,4 @@
-const char rcsid_moremem_c[] = "@(#)$KmKId: moremem.c,v 1.283 2022-05-06 21:47:30+00 kentd Exp $";
+const char rcsid_moremem_c[] = "@(#)$KmKId: moremem.c,v 1.284 2023-03-31 21:46:48+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -994,9 +994,9 @@ setup_pageinfo()
 	fixup_any_bank_any_page(0xe004, 0x08, mem0rd + 0x0400,
 						mem0rd + 0x0400 + BANK_SHADOW);
 	fixup_any_bank_any_page(0xe00c, 0x14, mem0rd + 0x0c00, mem0rd + 0x0c00);
-	fixup_any_bank_any_page(0xe020, 0x40, mem0rd + 0x2000,
+	fixup_any_bank_any_page(0xe020, 0x80, mem0rd + 0x2000,
 						mem0rd + 0x2000 + BANK_SHADOW);
-	fixup_any_bank_any_page(0xe060, 0xa0, mem0rd + 0x6000, mem0rd + 0x6000);
+	fixup_any_bank_any_page(0xe0a0, 0x60, mem0rd + 0x6000, mem0rd + 0x6000);
 
 	mem0rd = &(g_slow_memory_ptr[0x10000]);
 	fixup_any_bank_any_page(0xe100, 0x04, mem0rd + 0x0000, mem0rd + 0x0000);

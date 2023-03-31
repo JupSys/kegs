@@ -10,11 +10,12 @@
 /*	You may contact the author at: kadickey@alumni.princeton.edu	*/
 /************************************************************************/
 
-const char rcsid_protos_macsnd_driver_h[] = "@(#)$KmKId: protos_macsnd_driver.h,v 1.7 2021-01-06 06:35:07+00 kentd Exp $";
+const char rcsid_protos_macsnd_driver_h[] = "@(#)$KmKId: protos_macsnd_driver.h,v 1.8 2023-03-11 22:13:14+00 kentd Exp $";
 
 /* END_HDR */
 
 /* macsnd_driver.c */
 int mac_send_audio(byte *ptr, int in_size);
 void macsnd_init(void);
+
 

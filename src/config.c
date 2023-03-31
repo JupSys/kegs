@@ -1,4 +1,4 @@
-const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.132 2023-03-05 22:15:20+00 kentd Exp $";
+const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.135 2023-03-20 14:39:43+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -715,11 +715,9 @@ cfg_set_config_panel(int panel)
 void
 cfg_text_screen_dump()
 {
-	char	buf[85];
-	char	*filename;
 	FILE	*ofile;
-	int	offset, c, pos;
-	int	i, j;
+	char	*bufptr;
+	char	*filename;
 
 	filename = "kegs.screen.dump";
 	printf("Writing text screen to the file %s\n", filename);
@@ -729,9 +727,25 @@ cfg_text_screen_dump()
 				errno);
 		return;
 	}
+	bufptr = cfg_text_screen_str();
+	fputs(bufptr, ofile);
+	fclose(ofile);
+}
 
+char g_text_screen_buf[2100] = { 0 };
+
+char *
+cfg_text_screen_str()
+{
+	char	*bufptr;
+	int	pos, start_pos, c, offset;
+	int	i, j;
+
+	// bufptr must be at least (81*24)+2 characters
+	bufptr = &g_text_screen_buf[0];
+	pos = 0;
 	for(i = 0; i < 24; i++) {
-		pos = 0;
+		start_pos = pos;
 		for(j = 0; j < 40; j++) {
 			offset = g_screen_index[i] + j;
 			if(g_cur_a2_stat & ALL_STAT_VID80) {
@@ -739,23 +753,32 @@ cfg_text_screen_dump()
 				if(c < 0x20) {
 					c += 0x40;
 				}
-				buf[pos++] = c;
+				bufptr[pos++] = c;
 			}
 			c = g_slow_memory_ptr[0x0400 + offset] & 0x7f;
 			if(c < 0x20) {
 				c += 0x40;
 			}
-			buf[pos++] = c;
+			if(c == 0x7f) {
+				c = ' ';
+			}
+			bufptr[pos++] = c;
 		}
-		while((pos > 0) && (buf[pos-1] == ' ')) {
+		while((pos > start_pos) && (bufptr[pos-1] == ' ')) {
 			/* try to strip out trailing spaces */
 			pos--;
 		}
-		buf[pos++] = '\n';
-		buf[pos++] = 0;
-		fputs(buf, ofile);
+		bufptr[pos++] = '\n';
+		bufptr[pos] = 0;
 	}
-	fclose(ofile);
+
+	return bufptr;
+}
+
+char *
+cfg_get_current_copy_selection()
+{
+	return &g_text_screen_buf[0];
 }
 
 void

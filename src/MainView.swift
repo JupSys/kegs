@@ -1,4 +1,4 @@
-// $KmKId: MainView.swift,v 1.33 2022-01-16 04:52:20+00 kentd Exp $
+// $KmKId: MainView.swift,v 1.35 2023-03-20 14:40:16+00 kentd Exp $
 
 //	Copyright 2019-2022 by Kent Dickey
 //	This code is covered by the GNU GPL v3
@@ -377,6 +377,17 @@ class MainView: NSView {
 			Int32(current_flags & is_capslock))
 	}
 
+	@objc func do_copy_text(_ : AnyObject) {
+		// print("do_copy");
+		//let text_buf_cstr = UnsafeMutablePointer<Int8>.allocate(
+		//				capacity: 2100);
+		if let cstr = cfg_text_screen_str() {
+			let str = String(cString: cstr);
+			NSPasteboard.general.clearContents();
+			NSPasteboard.general.setString(str,
+				forType: NSPasteboard.PasteboardType.string);
+		}
+	}
 	@objc func do_paste(_ : AnyObject) {
 		// print("do_paste")
 		let general = NSPasteboard.general;

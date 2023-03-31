@@ -1,4 +1,4 @@
-const char rcsid_voc_c[] = "@(#)$KmKId: voc.c,v 1.8 2022-04-30 20:04:48+00 kentd Exp $";
+const char rcsid_voc_c[] = "@(#)$KmKId: voc.c,v 1.9 2023-03-31 21:48:40+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -99,6 +99,11 @@ voc_devsel_write(word32 loc, word32 val, double dcycs)
 		if(val & 0xc0) {
 			halt_printf("VOC write %04x = %02x\n", loc, val);
 		}
+#if 0
+		if(val != g_voc_reg1) {
+			printf("$c0b1:%02x (was %02x)\n", val, g_voc_reg1);
+		}
+#endif
 		g_voc_reg1 = val;
 		voc_update_interlace(dcycs);
 		return;
@@ -197,15 +202,19 @@ voc_read_reg0(double dcycs)
 void
 voc_update_interlace(double dcycs)
 {
-	word32	new_stat;
+	word32	new_stat, mask;
 
 	new_stat = 0;
 	if(((g_voc_reg1 & 0x30) == 0x30) && (g_voc_reg5 & 0x80)) {
 		new_stat = ALL_STAT_VOC_INTERLACE;
 	}
-	if((g_cur_a2_stat ^ new_stat) & ALL_STAT_VOC_INTERLACE) {
+	if((g_voc_reg1 & 0x30) == 0x10) {		// Draw SHR from mainmem
+		new_stat = ALL_STAT_VOC_MAIN;
+	}
+	mask = ALL_STAT_VOC_INTERLACE | ALL_STAT_VOC_MAIN;
+	if((g_cur_a2_stat ^ new_stat) & mask) {
 		// Interlace mode has changed
-		g_cur_a2_stat &= (~ALL_STAT_VOC_INTERLACE);
+		g_cur_a2_stat &= (~mask);
 		g_cur_a2_stat |= new_stat;
 		printf("Change VOC interlace mode: %08x\n", new_stat);
 		change_display_mode(dcycs);

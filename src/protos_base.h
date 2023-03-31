@@ -11,7 +11,7 @@
 /************************************************************************/
 
 #ifdef INCLUDE_RCSID_C
-const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.123 2023-03-05 22:14:01+00 kentd Exp $";
+const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.126 2023-03-20 12:51:21+00 kentd Exp $";
 #endif
 
 #ifdef __GNUC__
@@ -47,6 +47,7 @@ void joystick_update_buttons(void);
 
 /* adb.c */
 int adb_get_hide_warp_info(Kimage *kimage_ptr, int *warpptr);
+int adb_get_copy_requested(void);
 void adb_nonmain_check(void);
 void adb_init(void);
 void adb_reset(void);
@@ -93,6 +94,7 @@ void adb_kbd_repeat_off(void);
 void adb_mainwin_focus(int has_focus);
 
 
+
 /* engine_c.c */
 word32 get_memory8_io_stub(word32 addr, byte *stat, double *fcycs_ptr, double fplus_x_m1);
 word32 get_memory16_pieces_stub(word32 addr, byte *stat, double *fcycs_ptr, Fplus *fplus_ptr, int in_bank);
@@ -117,6 +119,7 @@ word32 get_remaining_operands(word32 addr, word32 opcode, word32 psr, double *cy
 int enter_engine(Engine_reg *engine_ptr);
 
 
+
 /* clock.c */
 double get_dtime(void);
 int micro_sleep(double dtime);
@@ -131,7 +134,9 @@ void clock_write_c034(word32 val);
 void do_clock_data(void);
 
 
+
 /* compile_time.c */
+
 
 
 /* config.c */
@@ -145,6 +150,8 @@ void cfg_err_printf(const char *pre_str, const char *fmt, ...);
 void cfg_toggle_config_panel(void);
 void cfg_set_config_panel(int panel);
 void cfg_text_screen_dump(void);
+char *cfg_text_screen_str(void);
+char *cfg_get_current_copy_selection(void);
 void config_vbl_update(int doit_3_persec);
 void config_parse_option(char *buf, int pos, int len, int line);
 void config_parse_bram(char *buf, int pos, int len);
@@ -218,6 +225,7 @@ int cfg_control_panel_update(void);
 int cfg_control_panel_update1(void);
 
 
+
 /* debugger.c */
 void debugger_init(void);
 void check_breakpoints(word32 addr, double *fcycs_ptr, word32 maybe_stack, word32 type);
@@ -276,6 +284,7 @@ void halt_printf(const char *fmt, ...);
 void halt2_printf(const char *fmt, ...);
 
 
+
 /* scc.c */
 void scc_init(void);
 void scc_reset(void);
@@ -310,6 +319,7 @@ word32 scc_read_data(int port, double dcycs);
 void scc_write_data(int port, word32 val, double dcycs);
 
 
+
 /* scc_socket_driver.c */
 void scc_socket_init(int port);
 void scc_socket_maybe_open_incoming(int port, double dcycs);
@@ -330,10 +340,13 @@ void scc_socket_modem_do_ring(int port, double dcycs);
 void scc_socket_do_answer(int port, double dcycs);
 
 
+
 /* scc_windriver.c */
 
 
+
 /* scc_macdriver.c */
+
 
 
 /* iwm.c */
@@ -404,9 +417,11 @@ void dummy1(word32 psr);
 void dummy2(word32 psr);
 
 
+
 /* joystick_driver.c */
 void joystick_callback_init(int native_type);
 void joystick_callback_update(word32 buttons, int paddle_x, int paddle_y);
+
 
 
 /* moremem.c */
@@ -445,6 +460,7 @@ int in_vblank(double dcycs);
 int read_vid_counters(int loc, double dcycs);
 
 
+
 /* paddles.c */
 void paddle_fixup_joystick_type(void);
 void paddle_trigger(double dcycs);
@@ -453,6 +469,7 @@ void paddle_trigger_keypad(double dcycs);
 void paddle_update_trigger_dcycs(double dcycs);
 int read_paddles(double dcycs, int paddle);
 void paddle_update_buttons(void);
+
 
 
 /* mockingboard.c */
@@ -470,6 +487,7 @@ void mock_ay8913_reg_read(int pair_num);
 void mock_ay8913_reg_write(int pair_num, double dcycs);
 void mock_ay8913_control_update(int pair_num, word32 new_val, word32 prev_val, double dcycs);
 void mockingboard_show(int got_num, word32 disable_mask);
+
 
 
 /* sim65816.c */
@@ -535,6 +553,7 @@ void clear_fatal_logs(void);
 char *kegs_malloc_str(const char *in_str);
 
 
+
 /* smartport.c */
 void smartport_error(void);
 void smartport_log(word32 start_addr, int cmd, int rts_addr, int cmd_list);
@@ -544,6 +563,7 @@ int do_read_c7(int unit_num, word32 buf, word32 blk);
 int do_write_c7(int unit_num, word32 buf, word32 blk);
 int do_format_c7(int unit_num);
 void do_c700(word32 ret);
+
 
 
 /* sound.c */
@@ -581,6 +601,7 @@ void doc_write_c03d(int val, double dcycs);
 void doc_show_ensoniq_state(void);
 
 
+
 /* sound_driver.c */
 void snddrv_init(void);
 void sound_child_fork(int size);
@@ -592,6 +613,7 @@ void reliable_buf_write(word32 *shm_addr, int pos, int size);
 void reliable_zero_write(int amt);
 int child_send_samples(byte *ptr, int size);
 void child_sound_loop(int read_fd, int write_fd, word32 *shm_addr);
+
 
 
 /* woz.c */
@@ -622,6 +644,7 @@ void woz_remove_a_track(Disk *dsk, word32 qtr_track);
 word32 woz_add_a_track(Disk *dsk, word32 qtr_track);
 
 
+
 /* unshk.c */
 word32 unshk_get_long4(byte *bptr);
 word32 unshk_get_word2(byte *bptr);
@@ -633,6 +656,7 @@ void unshk_data(Disk *dsk, byte *cptr, word32 compr_size, byte *ucptr, word32 un
 void unshk_parse_header(Disk *dsk, byte *cptr, int compr_size, byte *base_cptr);
 void unshk(Disk *dsk, const char *name_str);
 void unshk_dsk_raw_data(Disk *dsk);
+
 
 
 /* undeflate.c */
@@ -657,6 +681,7 @@ byte *undeflate_zipfile_blocks(Disk *dsk, byte *cptr, word32 compr_size);
 int undeflate_zipfile(Disk *dsk, int fd, dword64 dlocal_header_off, dword64 uncompr_dsize, dword64 compr_dsize);
 int undeflate_zipfile_search(byte *bptr, byte *cmp_ptr, int size, int cmp_len, int min_size);
 int undeflate_zipfile_make_list(int fd);
+
 
 
 /* dynapro.c */
@@ -713,6 +738,7 @@ word32 dynapro_build_map(Disk *dsk, Dynapro_file *fileptr);
 int dynapro_mount(Disk *dsk, char *dir_path, word32 num_blocks);
 
 
+
 /* dyna_type.c */
 word32 dynatype_scan_extensions(const char *str);
 word32 dynatype_find_prodos_type(const char *str);
@@ -723,7 +749,9 @@ int dynatype_comma_arg(const char *str, word32 *type_or_aux_ptr);
 void dynatype_fix_unix_name(Dynapro_file *fileptr, char *outbuf_ptr, int path_max);
 
 
+
 /* dyna_filt.c */
+
 
 
 /* dyna_validate.c */
@@ -737,6 +765,7 @@ int dynapro_validate_disk(Disk *dsk);
 void dynapro_validate_any_image(Disk *dsk);
 
 
+
 /* applesingle.c */
 word32 applesingle_get_be32(const byte *bptr);
 word32 applesingle_get_be16(const byte *bptr);
@@ -745,6 +774,7 @@ void applesingle_set_be16(byte *bptr, word32 val);
 word32 applesingle_map_from_prodos(Disk *dsk, Dynapro_file *fileptr, int do_file_data);
 word32 applesingle_from_unix(Disk *dsk, Dynapro_file *fileptr, byte *fptr, dword64 dsize);
 word32 applesingle_make_prodos_fork(Disk *dsk, byte *fptr, byte *tptr, word32 length);
+
 
 
 /* video.c */
@@ -814,6 +844,7 @@ word32 read_video_data(double dcycs);
 word32 float_bus(double dcycs);
 
 
+
 /* voc.c */
 word32 voc_devsel_read(word32 loc, double dcycs);
 void voc_devsel_write(word32 loc, word32 val, double dcycs);
@@ -821,4 +852,5 @@ void voc_iosel_c300_write(word32 loc, word32 val, double dcycs);
 void voc_reset(void);
 word32 voc_read_reg0(double dcycs);
 void voc_update_interlace(double dcycs);
+
 

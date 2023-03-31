@@ -1,4 +1,4 @@
-const char rcsid_xdriver_c[] = "@(#)$KmKId: xdriver.c,v 1.234 2022-11-24 15:51:10+00 kentd Exp $";
+const char rcsid_xdriver_c[] = "@(#)$KmKId: xdriver.c,v 1.236 2023-03-30 04:11:01+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -91,6 +91,17 @@ Pixmap	g_cursor_mask;
 
 XColor	g_xcolor_black = { 0, 0x0000, 0x0000, 0x0000, DoRed|DoGreen|DoBlue, 0 };
 XColor	g_xcolor_white = { 0, 0xffff, 0xffff, 0xffff, DoRed|DoGreen|DoBlue, 0 };
+
+const char *g_x_selection_strings[3] = {
+	// If we get SelectionRequests with target=Atom("TARGETS"), then
+	//  send XA_STRING plus this list to say what we can provide for copy
+	"UTF8_STRING", "text/plain", "text/plain;charset=utf-8"
+};
+
+int	g_x_num_targets = 0;
+Atom g_x_targets_array[5] = { 0 };
+
+Atom g_x_atom_targets = None;		// Will be set to "TARGETS"
 
 int g_depth_attempt_list[] = { 24, 16, 15 };
 
@@ -448,8 +459,9 @@ void
 x_video_init()
 {
 	int	tmp_array[0x80];
+	Atom	target;
 	char	cursor_data;
-	int	keycode;
+	int	keycode, num_targets, max_targets, num;
 	int	i;
 
 	printf("Opening X Window now\n");
@@ -496,6 +508,23 @@ x_video_init()
 	XFreePixmap(g_display, g_cursor_mask);
 
 	XFlush(g_display);
+	g_x_atom_targets = XInternAtom(g_display, "TARGETS", 0);
+	num = sizeof(g_x_selection_strings)/sizeof(g_x_selection_strings[0]);
+	g_x_targets_array[0] = XA_STRING;
+	num_targets = 1;
+	for(i = 0; i < num; i++) {
+		target = XInternAtom(g_display, g_x_selection_strings[i], 0);
+		if(target != None) {
+			g_x_targets_array[num_targets++] = target;
+		}
+	}
+	g_x_num_targets = num_targets;
+	max_targets = sizeof(g_x_targets_array)/sizeof(g_x_targets_array[0]);
+	if(num_targets > max_targets) {
+		printf("Overflowed g_x_targets_array: %d out of %d\n",
+						num_targets, max_targets);
+		exit(-1);
+	}
 
 	x_init_window(&g_mainwin_info, video_get_kimage(0), "KEGS");
 	x_init_window(&g_debugwin_info, video_get_kimage(1), "KEGS Debugger");
@@ -942,6 +971,51 @@ x_find_xwin(Window in_win)
 int g_num_check_input_calls = 0;
 int g_check_input_flush_rate = 2;
 
+// https://stackoverflow.com/questions/72236711/trouble-with-xsetselectionowner
+//  See answer from "n.m" on May 17th.
+void
+x_send_copy_data(Window_info *win_info_ptr)
+{
+	printf("x_send_copy_data!\n");
+	XSetSelectionOwner(g_display, XA_PRIMARY, win_info_ptr->x_win,
+							CurrentTime);
+	(void)cfg_text_screen_str();
+}
+
+void
+x_handle_copy(XSelectionRequestEvent *req_ev_ptr)
+{
+	byte	*bptr;
+	int	ret;
+
+	bptr = (byte *)cfg_get_current_copy_selection();
+	ret = XChangeProperty(g_display, req_ev_ptr->requestor,
+		req_ev_ptr->property, req_ev_ptr->target, 8,
+		PropModeReplace, bptr, strlen((char *)bptr));
+		// req_ev_ptr->target is either XA_STRING, or equivalent
+	if(0) {
+		// Seems to return 1, BadRequest always, but it works
+		printf("XChangeProperty ret: %d\n", ret);
+	}
+}
+
+void
+x_handle_targets(XSelectionRequestEvent *req_ev_ptr)
+{
+	int	ret;
+
+	// Tell the other client what targets we can supply from
+	//  g_x_targets_array[]
+	ret = XChangeProperty(g_display, req_ev_ptr->requestor,
+		req_ev_ptr->property, XA_ATOM, 32,
+		PropModeReplace, (byte *)&g_x_targets_array[0],
+		g_x_num_targets);
+	if(0) {
+		// Seems to return 1, BadRequest always, but it works
+		printf("XChangeProperty TARGETS ret: %d\n", ret);
+	}
+}
+
 void
 x_request_paste_data(Window_info *win_info_ptr)
 {
@@ -1033,11 +1107,21 @@ x_update_mouse(Window_info *win_info_ptr, int raw_x, int raw_y,
 void
 x_input_events()
 {
-	XEvent	ev;
+	XEvent	ev, response;
+	XSelectionRequestEvent *req_ev_ptr;
 	Window_info *win_info_ptr;
+	char	*str;
 	int	len, motion, key_or_mouse, refresh_needed, buttons, hide, warp;
-	int	width, height;
+	int	width, height, resp_property, match;
+	int	i;
 
+	str = 0;
+	if(str) {
+		// Use str
+	}
+	if(adb_get_copy_requested()) {
+		x_send_copy_data(&g_mainwin_info);
+	}
 	g_num_check_input_calls--;
 	if(g_num_check_input_calls < 0) {
 		len = XPending(g_display);
@@ -1155,6 +1239,54 @@ x_input_events()
 			video_update_scale(win_info_ptr->kimage_ptr, width,
 								height);
 			break;
+		case SelectionRequest:
+			//printf("SelectionRequest received\n");
+			req_ev_ptr = &(ev.xselectionrequest);
+			// This is part of the dance for copy: Another client
+			//  is asking us what format we can supply (TARGETS),
+			//  or is doing to tell us one at a time what types
+			//  it would like.
+#if 0
+			printf("req:%ld, property:%ld, target:%ld, "
+				"selection:%ld\n", req_ev_ptr->requestor,
+				req_ev_ptr->property, req_ev_ptr->target,
+				req_ev_ptr->selection);
+			str = XGetAtomName(g_display, req_ev_ptr->target);
+			printf("XAtom target str: %s\n", str);
+			XFree(str);
+			str = XGetAtomName(g_display, req_ev_ptr->property);
+			printf("XAtom property str: %s\n", str);
+			XFree(str);
+#endif
+			resp_property = None;
+			match = 0;
+			for(i = 0; i < g_x_num_targets; i++) {
+				if(req_ev_ptr->target == g_x_targets_array[i]) {
+					match = 1;
+					break;
+				}
+			}
+			if(match) {
+				x_handle_copy(req_ev_ptr);
+				resp_property = req_ev_ptr->property;
+			} else if(req_ev_ptr->target == g_x_atom_targets) {
+				// Some other agent is asking us "TARGETS",
+				//  so send our list of targets
+				x_handle_targets(req_ev_ptr);
+			}
+			// But no matter what the request target was, respond
+			//  so it will send an eventual request for XA_STRING
+			response.xselection.type = SelectionNotify;
+			response.xselection.display = req_ev_ptr->display;
+			response.xselection.requestor = req_ev_ptr->requestor;
+			response.xselection.selection = req_ev_ptr->selection;
+			response.xselection.target = req_ev_ptr->target;
+			response.xselection.property = resp_property;
+			response.xselection.time = req_ev_ptr->time;
+			XSendEvent(g_display, req_ev_ptr->requestor, 0, 0,
+								&response);
+			XFlush(g_display);	// Speed up getting more resp
+			break;
 		case SelectionNotify:
 			// We get this event after we requested the PRIMARY
 			//  selection, so paste this to adb().
@@ -1261,10 +1393,6 @@ x_handle_keysym(XEvent *xev_in)
 		keysym = XK_Scroll_Lock;	/* cmd */
 		break;
 	case XK_F5:
-		if(!is_up) {
-			video_set_x_refresh_needed(win_info_ptr->kimage_ptr, 1);
-			printf("g_x_refresh_needed = 1\n");
-		}
 		break;
 	case XK_F10:
 		if(!is_up) {

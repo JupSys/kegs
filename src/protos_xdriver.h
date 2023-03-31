@@ -10,7 +10,7 @@
 /*	You may contact the author at: kadickey@alumni.princeton.edu	*/
 /************************************************************************/
 
-const char rcsid_protos_x_h[] = "@(#)$KmKId: protos_xdriver.h,v 1.36 2022-01-23 18:38:55+00 kentd Exp $";
+const char rcsid_protos_x_h[] = "@(#)$KmKId: protos_xdriver.h,v 1.38 2023-03-30 04:10:59+00 kentd Exp $";
 
 /* END_HDR */
 
@@ -34,6 +34,9 @@ void x_set_size_hints(Window_info *win_info_ptr);
 void x_resize_window(Window_info *win_info_ptr);
 void x_update_display(Window_info *win_info_ptr);
 Window_info *x_find_xwin(Window in_win);
+void x_send_copy_data(Window_info *win_info_ptr);
+void x_handle_copy(XSelectionRequestEvent *req_ev_ptr);
+void x_handle_targets(XSelectionRequestEvent *req_ev_ptr);
 void x_request_paste_data(Window_info *win_info_ptr);
 void x_handle_paste(Window w, Atom property);
 int x_update_mouse(Window_info *win_info_ptr, int raw_x, int raw_y, int button_states, int buttons_valid);
@@ -45,4 +48,5 @@ void x_update_modifier_state(Window_info *win_info_ptr, int state);
 void x_auto_repeat_on(int must);
 void x_auto_repeat_off(int must);
 void x_full_screen(int do_full);
+
 

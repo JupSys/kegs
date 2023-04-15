@@ -1,4 +1,4 @@
-const char rcsid_sound_driver_c[] = "@(#)$KmKId: sound_driver.c,v 1.29 2021-08-17 00:08:36+00 kentd Exp $";
+const char rcsid_sound_driver_c[] = "@(#)$KmKId: sound_driver.c,v 1.30 2023-04-15 12:49:33+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -103,7 +103,7 @@ snddrv_init()
 		memset(shmaddr, 0, size);
 		g_sound_shm_addr = shmaddr;
 #ifdef MAC
-		macsnd_init(shmaddr);
+		macsnd_init();
 		return;
 #endif
 #ifdef _WIN32

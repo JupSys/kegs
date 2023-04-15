@@ -11,7 +11,7 @@
 /************************************************************************/
 
 #ifdef INCLUDE_RCSID_C
-const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.126 2023-03-20 12:51:21+00 kentd Exp $";
+const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.127 2023-04-09 20:06:26+00 kentd Exp $";
 #endif
 
 #ifdef __GNUC__
@@ -88,7 +88,8 @@ int adb_is_cmd_key_down(void);
 int adb_is_option_key_down(void);
 void adb_increment_speed(void);
 int adb_ascii_to_a2code(int unicode_c, int a2code, int *shift_down_ptr);
-void adb_physical_key_update(Kimage *kimage_ptr, int a2code, word32 unicode_c, int is_up, int shift_down, int ctrl_down, int lock_down);
+void adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c, int is_up, int shift_down, int ctrl_down, int lock_down);
+void adb_maybe_virtual_key_update(int a2code, int is_up);
 void adb_virtual_key_update(int a2code, int is_up);
 void adb_kbd_repeat_off(void);
 void adb_mainwin_focus(int has_focus);

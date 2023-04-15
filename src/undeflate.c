@@ -1,4 +1,4 @@
-const char rcsid_undeflate_c[] = "@(#)$KmKId: undeflate.c,v 1.13 2022-05-06 21:47:13+00 kentd Exp $";
+const char rcsid_undeflate_c[] = "@(#)$KmKId: undeflate.c,v 1.14 2023-04-15 12:49:42+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -401,7 +401,7 @@ undeflate_check_bit_reverse()
 			checked++;
 		}
 	}
-	// printf("Checked %08x values\n", checked);
+	printf("Checked %08x values\n", checked);
 }
 
 word32 *

@@ -1,5 +1,5 @@
 
-KEGS: Kent's Emulated GS version 1.16
+KEGS: Kent's Emulated GS version 1.21
 http://kegs.sourceforge.net/
 
 What is this?
@@ -219,12 +219,13 @@ Shift-F7: Toggle fast_disk_emul on/off
 F8:	Toggle pointer hiding on/off.
 F9:	Invert the sense of the joystick.
 Shift-F9: Swap x and y joystick/paddle axes.
+Ctrl-F9: Copy Text screen to host system clipboard
 F12:	Alias of Pause/Break which is treated as Reset
 
 F2, Alt_R, Meta_r, Menu, Print, Mode_switch, Option:   Option key
 F1, Alt_L, Meta_L, Cancel, Scroll_lock, Command:       Command key
 Num_Lock:		Keypad "Clear".
-F12, Pause, Break:	Reset
+F12, Pause, Break:	Reset.  Must press Ctrl to get Apple IIgs to reset
 
 "Home": Alias for "=" on the keypad (since my Unix keyboard doesn't have an =).
 

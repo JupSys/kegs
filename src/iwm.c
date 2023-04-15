@@ -1,4 +1,4 @@
-const char rcsid_iwm_c[] = "@(#)$KmKId: iwm.c,v 1.196 2023-03-10 03:34:07+00 kentd Exp $";
+const char rcsid_iwm_c[] = "@(#)$KmKId: iwm.c,v 1.198 2023-04-02 22:27:36+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -1002,7 +1002,7 @@ iwm_do_action35(double dcycs)
 		stat35 = (((state >> IWM_BIT_PHASES) & 3) << 2) |
 			((state >> 6) & 2) |
 			(((state >> IWM_BIT_PHASES) >> 2) & 1);
-		dbg_log_info(dcycs, state, stat35, 0x100e7);
+		dbg_log_info(dcycs, state, stat35, 0xf00e7);
 
 		switch(stat35) {
 		case 0x00:	/* Set step direction inward (higher tracks) */
@@ -1039,8 +1039,7 @@ iwm_do_action35(double dcycs)
 			break;
 		case 0x0d:	/* eject disk */
 			printf("Action 0x0d, will eject disk\n");
-			halt_printf("Action 0x0d, will eject disk\n");
-			// iwm_eject_disk(dsk);  HACK: uncomment me!
+			iwm_eject_disk(dsk);
 			break;
 		case 0x02:
 		case 0x07:

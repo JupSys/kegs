@@ -1,4 +1,4 @@
-# $KmKId: makefile,v 1.46 2023-03-10 23:05:19+00 kentd Exp $
+# $KmKId: makefile,v 1.47 2023-04-01 14:20:47+00 kentd Exp $
 
 XOPTS_WIN = -Wall -fomit-frame-pointer -march=pentium
 
@@ -97,7 +97,7 @@ win32.o: win32.rc
 	$(KMKROOT)/bin/kmkproto $(XOPTS) $*.m > $*.proto
 	echo >> $*.proto
 
-$(PROTO_OUT): $(PROTO_FILE_LIST) ldvars
+$(PROTO_OUT): $(PROTO_FILE_LIST) ldvars proto_vars
 	$(KMKROOT)/bin/kmkproto_head $(PROTO_OUT) tmp_protos.h
 	cat /dev/null $(PROTO_FILE_LIST) >> tmp_protos.h
 	rm -f $(PROTO_OUT)

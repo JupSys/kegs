@@ -1,4 +1,4 @@
-const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.107 2023-03-20 12:49:49+00 kentd Exp $";
+const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.108 2023-04-09 20:05:27+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -143,6 +143,7 @@ int	g_mouse_ctl_addr = 3;		/* ADB ucontroller's mouse addr*/
 
 word32	g_virtual_key_up[4];	/* bitmask of all possible 128 a2codes */
 				/* indicates which keys are up=1 by bit */
+int	g_rawa2_to_a2code[128];
 
 int	g_keypad_key_is_down[10] = { 0 };/* List from 0-9 of which keypad */
 					/*  keys are currently pressed */
@@ -357,6 +358,7 @@ adb_init()
 				i, keycode);
 			my_exit(1);
 		}
+		g_rawa2_to_a2code[i] = -1;
 	}
 
 	g_c025_val = 0;
@@ -372,11 +374,9 @@ adb_init()
 	adb_reset();
 }
 
-
 void
 adb_reset()
 {
-
 	g_c027_val = 0;
 
 	g_key_down = 0;
@@ -402,9 +402,7 @@ adb_reset()
 
 	g_kbd_reg0_pos = 0;
 	g_kbd_reg3_16bit = 0x602;
-
 }
-
 
 #define LEN_ADB_LOG	16
 STRUCT(Adb_log) {
@@ -1948,32 +1946,36 @@ adb_ascii_to_a2code(int unicode_c, int a2code, int *shift_down_ptr)
 }
 
 void
-adb_physical_key_update(Kimage *kimage_ptr, int a2code, word32 unicode_c,
+adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c,
 		int is_up, int shift_down, int ctrl_down, int lock_down)
 {
 	word32	restore_c025_val;
-	int	autopoll, special, ascii_and_type, ascii, new_shift;
+	int	special, ascii_and_type, ascii, new_shift, a2code, other_a2code;
 
 	/* this routine called by xdriver to pass raw codes--handle */
 	/*  ucontroller and ADB bus protocol issues here */
 	/* if autopoll on, pass it on through to c025,c000 regs */
 	/*  else only put it in kbd reg 3, and pull SRQ if needed */
 
-	adb_printf("adb_phys_key_update: %02x, %d\n", a2code, is_up);
+	adb_printf("adb_phys_key_update: %02x, %d\n", raw_a2code, is_up);
 
-	if(a2code < 0 || a2code > 0x7f) {
-		halt_printf("a2code: %04x!\n", a2code);
+	if((raw_a2code < 0) || (raw_a2code > 0x7f)) {
+		halt_printf("raw_a2code: %04x!\n", raw_a2code);
 		return;
 	}
+	a2code = raw_a2code;
 	restore_c025_val = 0;
 	if(unicode_c > 0) {
 		// To enable international keyboards, ignore a2code, look up
 		//  what U.S. keycode would be and return that
 		new_shift = g_c025_val & 1;
 		a2code = adb_ascii_to_a2code(unicode_c, a2code, &new_shift);
-		if(a2code && (g_c025_val & 1) != new_shift) {
+		if(a2code && ((g_c025_val & 1) != new_shift)) {
 			restore_c025_val = g_c025_val | 0x100;
 			g_c025_val = (g_c025_val & -2) | new_shift;
+		}
+		if(!is_up) {
+			g_rawa2_to_a2code[raw_a2code & 0x7f] = a2code;
 		}
 	}
 
@@ -2115,6 +2117,23 @@ adb_physical_key_update(Kimage *kimage_ptr, int a2code, word32 unicode_c,
 		}
 	}
 
+	adb_maybe_virtual_key_update(a2code, is_up);
+	other_a2code = g_rawa2_to_a2code[raw_a2code & 0x7f];
+	if((other_a2code >= 0) && is_up) {
+		adb_maybe_virtual_key_update(other_a2code, is_up);
+		g_rawa2_to_a2code[raw_a2code & 0x7f] = -1;
+	}
+
+	if(restore_c025_val) {
+		g_c025_val = restore_c025_val & 0xff;		// Restore shift
+	}
+}
+
+void
+adb_maybe_virtual_key_update(int a2code, int is_up)
+{
+	int	autopoll;
+
 	autopoll = 1;
 	if(g_adb_mode & 1) {
 		/* autopoll is explicitly off */
@@ -2128,7 +2147,6 @@ adb_physical_key_update(Kimage *kimage_ptr, int a2code, word32 unicode_c,
 		/* always do autopoll */
 		autopoll = 1;
 	}
-
 
 	if(is_up) {
 		if(!autopoll) {
@@ -2145,10 +2163,6 @@ adb_physical_key_update(Kimage *kimage_ptr, int a2code, word32 unicode_c,
 			/* was up, now down */
 			adb_virtual_key_update(a2code, is_up);
 		}
-	}
-
-	if(restore_c025_val) {
-		g_c025_val = restore_c025_val & 0xff;		// Restore shift
 	}
 }
 

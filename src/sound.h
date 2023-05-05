@@ -1,10 +1,10 @@
 #ifdef INCLUDE_RCSID_C
-const char rcsid_sound_h[] = "@(#)$KmKId: sound.h,v 1.30 2023-04-15 12:49:21+00 kentd Exp $";
+const char rcsid_sound_h[] = "@(#)$KmKId: sound.h,v 1.31 2023-05-04 19:35:29+00 kentd Exp $";
 #endif
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2021 by Kent Dickey		*/
+/*			Copyright 2002-2023 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/

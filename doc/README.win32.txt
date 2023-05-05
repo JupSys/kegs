@@ -31,3 +31,11 @@ Linker->Input, then on the right, the first item "Additional Dependencies:"
 add: "wsock32.lib;dsound.lib;winmm.lib;".  I added it near the end, before
 odbccp32.lib.
 
+To compile:
+
+mkkegswinmac -j 20
+cd obj
+start ./kegswin.vcxproj
+
+Then Build->Build kegswin (Ctrl-b)
+

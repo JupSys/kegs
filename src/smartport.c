@@ -1,8 +1,8 @@
-const char rcsid_smartport_c[] = "@(#)$KmKId: smartport.c,v 1.52 2022-04-03 13:38:18+00 kentd Exp $";
+const char rcsid_smartport_c[] = "@(#)$KmKId: smartport.c,v 1.54 2023-05-04 19:33:31+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2022 by Kent Dickey		*/
+/*			Copyright 2002-2023 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -19,7 +19,7 @@ extern int Halt_on;
 extern int g_rom_version;
 extern int g_io_amt;
 extern int g_highest_smartport_unit;
-extern double g_cur_dcycs;
+extern dword64 g_cur_dfcyc;
 
 extern Engine_reg engine;
 
@@ -147,13 +147,13 @@ do_c70d(word32 arg0)
 	ctl_code = get_memory_c((cmd_list + 4 + ext) & mask);
 
 	smartport_log(0xc70d, cmd, rts_addr, cmd_list);
-	dbg_log_info(g_cur_dcycs, (rts_addr << 16) | (unit << 8) | cmd,
+	dbg_log_info(g_cur_dfcyc, (rts_addr << 16) | (unit << 8) | cmd,
 							cmd_list, 0xc70d);
 #if 0
 	if(cmd != 0x41) {
-		printf("SMTPT: c70d %08x, %08x at %f\n",
+		printf("SMTPT: c70d %08x, %08x at %016llx\n",
 			(rts_addr << 16) | (unit << 8) | cmd, cmd_list,
-			g_cur_dcycs);
+			g_cur_dfcyc);
 	}
 #endif
 	ret = 0;
@@ -182,7 +182,7 @@ do_c70d(word32 arg0)
 							(65536*status_ptr_hi);
 
 		smartport_log(0, unit, status_ptr, ctl_code);
-		dbg_log_info(g_cur_dcycs, (ctl_code << 16) | unit,
+		dbg_log_info(g_cur_dfcyc, (ctl_code << 16) | unit,
 							cmd_list, 0xc700);
 
 		disk_printf("unit: %02x, status_ptr: %06x, code: %02x\n",
@@ -481,7 +481,7 @@ do_c70a(word32 arg0)
 	}
 
 	smartport_log(0xc70a, cmd, blk, buf);
-	dbg_log_info(g_cur_dcycs,
+	dbg_log_info(g_cur_dfcyc,
 		(buf << 16) | ((unit & 0xff) << 8) | (cmd & 0xff), blk, 0xc70a);
 
 #if 0
@@ -503,7 +503,7 @@ do_c70a(word32 arg0)
 		dsize = (dsize + 511) / 512;
 
 		smartport_log(0, unit, dsize, 0);
-		dbg_log_info(g_cur_dcycs, ((unit & 0xff) << 8) | (cmd & 0xff),
+		dbg_log_info(g_cur_dfcyc, ((unit & 0xff) << 8) | (cmd & 0xff),
 							dsize, 0x1c700);
 
 		ret = 0;
@@ -538,7 +538,7 @@ do_read_c7(int unit_num, word32 buf, word32 blk)
 	int	len, fd;
 	int	i;
 
-	dbg_log_info(g_cur_dcycs, (buf << 8) | (unit_num & 0xff), blk, 0xc701);
+	dbg_log_info(g_cur_dfcyc, (buf << 8) | (unit_num & 0xff), blk, 0xc701);
 	if((unit_num < 0) || (unit_num > MAX_C7_DISKS)) {
 		halt_printf("do_read_c7: unit_num: %d\n", unit_num);
 		smartport_error();
@@ -616,7 +616,7 @@ do_write_c7(int unit_num, word32 buf, word32 blk)
 	int	len, fd;
 	int	i;
 
-	dbg_log_info(g_cur_dcycs, (buf << 16) | (unit_num & 0xff), blk, 0xc702);
+	dbg_log_info(g_cur_dfcyc, (buf << 16) | (unit_num & 0xff), blk, 0xc702);
 
 	if(unit_num < 0 || unit_num > MAX_C7_DISKS) {
 		halt_printf("do_write_c7: unit_num: %d\n", unit_num);
@@ -688,7 +688,7 @@ do_format_c7(int unit_num)
 	int	len, max, fd;
 	int	i;
 
-	dbg_log_info(g_cur_dcycs, (unit_num & 0xff), 0, 0xc703);
+	dbg_log_info(g_cur_dfcyc, (unit_num & 0xff), 0, 0xc703);
 
 	if(unit_num < 0 || unit_num > MAX_C7_DISKS) {
 		halt_printf("do_format_c7: unit_num: %d\n", unit_num);

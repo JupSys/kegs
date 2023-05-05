@@ -1,10 +1,10 @@
 #ifdef INCLUDE_RCSID_C
-const char rcsid_scc_h[] = "@(#)$KmKId: scc.h,v 1.20 2020-06-17 02:24:32+00 kentd Exp $";
+const char rcsid_scc_h[] = "@(#)$KmKId: scc.h,v 1.22 2023-05-04 19:32:06+00 kentd Exp $";
 #endif
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2020 by Kent Dickey		*/
+/*			Copyright 2002-2023 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -88,10 +88,10 @@ STRUCT(Scc) {
 
 	int	char_size;
 	int	baud_rate;
-	double	out_char_dcycs;
+	dword64	out_char_dfcyc;
 
 	int	socket_num_rings;
-	int	socket_last_ring_dcycs;
+	dword64	socket_last_ring_dfcyc;
 	word32	modem_mode;
 	int	modem_dial_or_acc_mode;
 	int	modem_plus_mode;

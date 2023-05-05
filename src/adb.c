@@ -1,8 +1,8 @@
-const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.108 2023-04-09 20:05:27+00 kentd Exp $";
+const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.110 2023-05-04 19:33:31+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2022 by Kent Dickey		*/
+/*			Copyright 2002-2023 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -29,7 +29,7 @@ extern int g_invert_paddles;
 extern int g_joystick_type;
 extern int g_config_control_panel;
 extern int g_status_enable;
-extern double g_cur_dcycs;
+extern dword64 g_cur_dfcyc;
 
 extern byte *g_slow_memory_ptr;
 extern byte *g_memory_ptr;
@@ -101,7 +101,7 @@ int g_mouse_raw_y = 0;
 #define ADB_MOUSE_FIFO		8
 
 STRUCT(Mouse_fifo) {
-	double	dcycs;
+	dword64	dfcyc;
 	int	x;
 	int	y;
 	int	buttons;
@@ -1305,14 +1305,14 @@ int
 adb_update_mouse(Kimage *kimage_ptr, int x, int y, int button_states,
 							int buttons_valid)
 {
-	double	dcycs;
+	dword64	dfcyc;
 	int	button1_changed, mouse_moved, unhide, pos;
 	int	i;
 
 	if(kimage_ptr != &g_mainwin_kimage) {
 		adb_nonmain_check();
 	}
-	dcycs = g_cur_dcycs;
+	dfcyc = g_cur_dfcyc;
 
 	unhide = (g_adb_mainwin_has_focus == 0);
 	if((buttons_valid >= 0) && (buttons_valid & 0x1000)) {
@@ -1366,7 +1366,7 @@ adb_update_mouse(Kimage *kimage_ptr, int x, int y, int button_states,
 		y = y >> 1;
 	}
 
-	mouse_compress_fifo(dcycs);
+	mouse_compress_fifo(dfcyc);
 
 #if 0
 	printf("Update Mouse called with buttons:%d x,y:%d,%d, fifo:%d,%d, "
@@ -1394,7 +1394,7 @@ adb_update_mouse(Kimage *kimage_ptr, int x, int y, int button_states,
 
 	g_mouse_fifo[0].x = x;
 	g_mouse_fifo[0].y = y;
-	g_mouse_fifo[0].dcycs = dcycs;
+	g_mouse_fifo[0].dfcyc = dfcyc;
 
 	button1_changed = (buttons_valid & 1) &&
 			((button_states & 1) != (g_mouse_fifo[0].buttons & 1));
@@ -1437,7 +1437,7 @@ adb_update_mouse(Kimage *kimage_ptr, int x, int y, int button_states,
 }
 
 int
-mouse_read_c024(double dcycs)
+mouse_read_c024(dword64 dfcyc)
 {
 	word32	ret, tool_start;
 	int	em_active, target_x, target_y, delta_x, delta_y, a2_x, a2_y;
@@ -1450,7 +1450,7 @@ mouse_read_c024(double dcycs)
 		return 0;
 	}
 
-	mouse_compress_fifo(dcycs);
+	mouse_compress_fifo(dfcyc);
 
 	pos = g_mouse_fifo_pos;
 	target_x = g_mouse_fifo[pos].x;
@@ -1567,8 +1567,8 @@ mouse_read_c024(double dcycs)
 	}
 
 
-	adb_printf("Read c024, mouse is_y:%d, %02x, vbl:%08x, dcyc:%f, em:%d\n",
-		g_adb_mouse_coord, ret, g_vbl_count, dcycs, em_active);
+	adb_printf("Rd c024, mouse is_y:%d, %02x, vbl:%08x, dfcyc:%016llx, em:"
+		"%d\n", g_adb_mouse_coord, ret, g_vbl_count, dfcyc, em_active);
 	adb_printf("...mouse targ_x:%d,%d delta_x,y:%d,%d fifo:%d, a2:%d,%d\n",
 		target_x, target_y, delta_x, delta_y, g_mouse_fifo_pos,
 		a2_x, a2_y);
@@ -1588,8 +1588,9 @@ mouse_read_c024(double dcycs)
 }
 
 void
-mouse_compress_fifo(double dcycs)
+mouse_compress_fifo(dword64 dfcyc)
 {
+	dword64	ddelta;
 	int	pos;
 
 	/* The mouse fifo exists so that fast button changes don't get lost */
@@ -1598,8 +1599,9 @@ mouse_compress_fifo(double dcycs)
 	/*  the emulated code isn't looking at the mouse registers */
 	/* This routine compresses all mouse events > 0.5 seconds old */
 
+	ddelta = (500LL*1000) << 16;
 	for(pos = g_mouse_fifo_pos; pos >= 1; pos--) {
-		if(g_mouse_fifo[pos].dcycs < (dcycs - 500*1000.0)) {
+		if((g_mouse_fifo[pos].dfcyc + ddelta) < dfcyc) {
 			/* Remove this entry */
 			adb_printf("Old mouse FIFO pos %d removed\n", pos);
 			g_mouse_fifo_pos = pos - 1;

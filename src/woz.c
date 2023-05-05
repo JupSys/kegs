@@ -1,8 +1,8 @@
-const char rcsid_woz_c[] = "@(#)$KmKId: woz.c,v 1.26 2022-05-07 22:24:44+00 kentd Exp $";
+const char rcsid_woz_c[] = "@(#)$KmKId: woz.c,v 1.28 2023-05-04 19:35:29+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2022 by Kent Dickey		*/
+/*			Copyright 2002-2023 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -281,7 +281,7 @@ woz_parse_trks(Disk *dsk, int offset, int size)
 }
 
 int
-woz_add_track(Disk *dsk, int qtr_track, word32 tmap, double dcycs)
+woz_add_track(Disk *dsk, int qtr_track, word32 tmap, dword64 dfcyc)
 {
 	Woz_info *wozinfo_ptr;
 	Trk	*trk;
@@ -361,13 +361,13 @@ woz_add_track(Disk *dsk, int qtr_track, word32 tmap, double dcycs)
 	trk->sync_ptr = (byte *)malloc(num_bytes);
 
 	dsk->cur_trk_ptr = 0;
-	iwm_move_to_ftrack(dsk, qtr_track << 16, 0, dcycs);
+	iwm_move_to_ftrack(dsk, qtr_track << 16, 0, dfcyc);
 	sync_ptr = &(trk->sync_ptr[0]);
 	for(i = 0; i < (int)raw_bytes; i++) {
 		sync_ptr[i] = 0xff;
 	}
 
-	iwm_recalc_sync_from(dsk, qtr_track, 0, dcycs);
+	iwm_recalc_sync_from(dsk, qtr_track, 0, dfcyc);
 
 	if(qtr_track == 0) {
 		printf("Track 0 data begins: %02x %02x %02x, offset:%d\n",
@@ -491,7 +491,7 @@ woz_malloc(byte *wozptr, word32 woz_size)
 }
 
 int
-woz_reopen(Disk *dsk, double dcycs)
+woz_reopen(Disk *dsk, dword64 dfcyc)
 {
 	byte	act_tmap[160];
 	Woz_info *wozinfo_ptr;
@@ -586,7 +586,7 @@ woz_reopen(Disk *dsk, double dcycs)
 				// Otherwise, a lone track, always add it
 			}
 		}
-		ret = woz_add_track(dsk, i, tmap, dcycs);
+		ret = woz_add_track(dsk, i, tmap, dfcyc);
 		if(ret == 0) {
 			printf("woz_add_track i:%04x tmap:%04x ret 0\n", i,
 								tmap);
@@ -598,7 +598,7 @@ woz_reopen(Disk *dsk, double dcycs)
 }
 
 int
-woz_open(Disk *dsk, double dcycs)
+woz_open(Disk *dsk, dword64 dfcyc)
 {
 	Woz_info *wozinfo_ptr;
 	byte	*wozptr;
@@ -651,7 +651,7 @@ woz_open(Disk *dsk, double dcycs)
 		return ret;
 	}
 
-	ret = woz_reopen(dsk, dcycs);
+	ret = woz_reopen(dsk, dfcyc);
 	printf("woz_reopen ret:%d\n", ret);
 
 	woz_maybe_reparse(dsk);

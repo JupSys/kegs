@@ -1,4 +1,4 @@
-const char rcsid_windriver_c[] = "@(#)$KmKId: windriver.c,v 1.15 2022-02-12 01:32:03+00 kentd Exp $";
+const char rcsid_windriver_c[] = "@(#)$KmKId: windriver.c,v 1.16 2023-05-04 14:33:28+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -23,6 +23,7 @@ const char rcsid_windriver_c[] = "@(#)$KmKId: windriver.c,v 1.15 2022-02-12 01:3
 #include <mmsystem.h>
 #include <winsock.h>
 #include <commctrl.h>
+#include <io.h>			/* For _get_osfhandle */
 
 #include "defc.h"
 #include "win_dirent.h"
@@ -208,6 +209,18 @@ win_nonblock_read_stdin(int fd, char *bufptr, int len)
 	return ret;
 }
 #endif
+
+int
+ftruncate(int fd, word32 length)
+{
+	HANDLE	handle1;
+
+	handle1 = (HANDLE)_get_osfhandle(fd);
+	SetFilePointer(handle1, length, 0, FILE_BEGIN);
+	SetEndOfFile(handle1);
+
+	return 0;
+}
 
 void
 x_dialog_create_kegs_conf(const char *str)

@@ -1,6 +1,6 @@
-// $KmKId: MainView.swift,v 1.35 2023-03-20 14:40:16+00 kentd Exp $
+// $KmKId: MainView.swift,v 1.36 2023-05-04 19:32:06+00 kentd Exp $
 
-//	Copyright 2019-2022 by Kent Dickey
+//	Copyright 2019-2023 by Kent Dickey
 //	This code is covered by the GNU GPL v3
 //	See the file COPYING.txt or https://www.gnu.org/licenses/
 //

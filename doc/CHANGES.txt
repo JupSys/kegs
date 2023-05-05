@@ -1,5 +1,17 @@
 
-Changes in KEGS v1.21 since v1.19 (04/15/23)
+Changes in KEGS v1.23 since v1.22 (05/05/23)
+- Change the way KEGS tracks time from a double to a unsigned long long,
+	which enables higher speeds.
+- Support video mode changes in the middle of lines.
+
+
+Changes in KEGS v1.22 since v1.21 (04/27/23)
+- Remove debugging printfs from iwm.c.
+- Fix the way video updates are done to fix Dagen Brock's HDGR demo (which
+	switches pages to double the GR vertical resolution).
+
+
+Changes in KEGS v1.21 since v1.20 (04/15/23)
 - Fix Antoine's reported issue where KEGS would hang after ejecting 3.5" disks.
 	Caused by a debug statement accidentally left in for the release.
 - Fix Stephan's reported issue with keys repeating forever with French

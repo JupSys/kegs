@@ -1,4 +1,10 @@
 
+Changes in KEGS v1.24 since v1.23 (05/17/23)
+- Win32 support.  kegswin.exe now part of the standard release.  The Windows
+	port is still beta quality.
+- Try to fix jerky video to make KEGS seem smoother.
+
+
 Changes in KEGS v1.23 since v1.22 (05/05/23)
 - Change the way KEGS tracks time from a double to a unsigned long long,
 	which enables higher speeds.

@@ -1,4 +1,4 @@
-const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.110 2023-05-04 19:33:31+00 kentd Exp $";
+const char rcsid_adb_c[] = "@(#)$KmKId: adb.c,v 1.112 2023-05-18 00:32:12+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -1865,6 +1865,20 @@ adb_increment_speed()
 	printf("Toggling g_limit_speed to %d%s\n", g_limit_speed, str);
 }
 
+void
+adb_update_c025_mask(Kimage *kimage_ptr, word32 new_c025_val, word32 mask)
+{
+	// Called by *driver.c host drivers to handle focus changes and
+	//  capslock state (so if capslock is on, we leave the window, release
+	//  capslock, then reenter the window, we update things properly).
+	if(kimage_ptr == &g_mainwin_kimage) {
+		g_c025_val = (g_c025_val & (~mask)) | new_c025_val;
+	} else {
+		kimage_ptr->c025_val = (kimage_ptr->c025_val & (~mask)) |
+								new_c025_val;
+	}
+}
+
 int
 adb_ascii_to_a2code(int unicode_c, int a2code, int *shift_down_ptr)
 {
@@ -1949,9 +1963,9 @@ adb_ascii_to_a2code(int unicode_c, int a2code, int *shift_down_ptr)
 
 void
 adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c,
-		int is_up, int shift_down, int ctrl_down, int lock_down)
+		int is_up)
 {
-	word32	restore_c025_val;
+	word32	restore_c025_val, restorek_c025_val;
 	int	special, ascii_and_type, ascii, new_shift, a2code, other_a2code;
 
 	/* this routine called by xdriver to pass raw codes--handle */
@@ -1967,6 +1981,7 @@ adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c,
 	}
 	a2code = raw_a2code;
 	restore_c025_val = 0;
+	restorek_c025_val = 0;
 	if(unicode_c > 0) {
 		// To enable international keyboards, ignore a2code, look up
 		//  what U.S. keycode would be and return that
@@ -1974,7 +1989,10 @@ adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c,
 		a2code = adb_ascii_to_a2code(unicode_c, a2code, &new_shift);
 		if(a2code && ((g_c025_val & 1) != new_shift)) {
 			restore_c025_val = g_c025_val | 0x100;
+			restorek_c025_val = kimage_ptr->c025_val;
 			g_c025_val = (g_c025_val & -2) | new_shift;
+			kimage_ptr->c025_val = (kimage_ptr->c025_val & -2) |
+							new_shift;
 		}
 		if(!is_up) {
 			g_rawa2_to_a2code[raw_a2code & 0x7f] = a2code;
@@ -2088,8 +2106,11 @@ adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c,
 	}
 
 	if(kimage_ptr == &g_debugwin_kimage) {
-		debugger_key_event(a2code, is_up, shift_down, ctrl_down,
-								lock_down);
+		debugger_key_event(kimage_ptr, a2code, is_up);
+		if(restore_c025_val) {
+			g_c025_val = restore_c025_val & 0xff;	// Restore shift
+			kimage_ptr->c025_val = restorek_c025_val;
+		}
 		return;
 	}
 

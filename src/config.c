@@ -1,4 +1,4 @@
-const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.135 2023-03-20 14:39:43+00 kentd Exp $";
+const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.136 2023-05-17 17:42:30+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -991,7 +991,7 @@ config_load_roms()
 				/* Clear banks fc-ff to 0 */
 	if(len == 32*1024) {		// Apple //e
 		g_rom_version = 0;
-		g_mem_size_base = 256*1024;
+		g_mem_size_base = 128*1024;
 		ret = (int)read(fd, &g_rom_fc_ff_ptr[3*65536 + 32768], len);
 	} else if(len == 128*1024) {
 		g_rom_version = 1;

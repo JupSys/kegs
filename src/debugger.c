@@ -1,4 +1,4 @@
-const char rcsid_debugger_c[] = "@(#)$KmKId: debugger.c,v 1.54 2023-05-02 21:47:01+00 kentd Exp $";
+const char rcsid_debugger_c[] = "@(#)$KmKId: debugger.c,v 1.56 2023-05-17 17:42:03+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -93,7 +93,6 @@ Data_log *g_log_data_ptr = &(g_data_log_array[0]);
 Data_log *g_log_data_start_ptr = &(g_data_log_array[0]);
 Data_log *g_log_data_end_ptr = &(g_data_log_array[PC_LOG_LEN]);
 
-int	g_quit_sim_now = 0;
 char	g_cmd_buffer[MAX_CMD_BUFFER + 2] = { 0 };
 int	g_cmd_buffer_len = 2;
 
@@ -232,34 +231,46 @@ debugger_update_list_kpc()
 }
 
 void
-debugger_key_event(int a2code, int is_up, int shift_down, int ctrl_down,
-							int lock_down)
+debugger_key_event(Kimage *kimage_ptr, int a2code, int is_up)
 {
+	word32	c025_val, special;
 	int	key, pos, changed;
 
 	pos = 1;
-	if(shift_down) {
+
+	c025_val = kimage_ptr->c025_val;
+
+	if(c025_val & 1) {		// Shift is down
 		pos = 2;
-	} else if(lock_down) {
+	} else if(c025_val & 4) {	// Capslock is down
 		key = g_a2_key_to_ascii[a2code][1];
 		if((key >= 'a') && (key <= 'z')) {
 			pos = 2;		// CAPS LOCK on
 		}
 	}
-	if(ctrl_down) {
+	if(c025_val & 2) {		// Ctrl is down
 		pos = 3;
 	}
 	key = g_a2_key_to_ascii[a2code][pos];
-	if((key < 0) || is_up) {
+	if(key < 0) {
 		return;
+	}
+	special = (key >> 8) & 0xff;		// c025 changes
+	if(is_up) {
+		c025_val = c025_val & (~special);
+	} else {
+		c025_val = c025_val | special;
+	}
+	kimage_ptr->c025_val = c025_val;
+	if(is_up) {
+		return;		// Nothing else to do
 	}
 	if(key >= 0x80) {
 		// printf("key: %04x\n", key);
 		if(key == 0x8007) {			// F7 - close debugger
-			video_set_active(&g_debugwin_kimage,
-						!g_debugwin_kimage.active);
+			video_set_active(kimage_ptr, !kimage_ptr->active);
 			printf("Toggled debugger window to:%d\n",
-						g_debugwin_kimage.active);
+						kimage_ptr->active);
 		}
 		if((key & 0xff) == 0x74) {		// Page up keycode
 			debugger_page_updown(1);

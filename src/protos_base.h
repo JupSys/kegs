@@ -11,7 +11,7 @@
 /************************************************************************/
 
 #ifdef INCLUDE_RCSID_C
-const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.131 2023-04-30 17:26:31+00 kentd Exp $";
+const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.133 2023-05-17 17:42:42+00 kentd Exp $";
 #endif
 
 #ifdef __GNUC__
@@ -87,8 +87,9 @@ word32 adb_read_c025(void);
 int adb_is_cmd_key_down(void);
 int adb_is_option_key_down(void);
 void adb_increment_speed(void);
+void adb_update_c025_mask(Kimage *kimage_ptr, word32 new_c025_val, word32 mask);
 int adb_ascii_to_a2code(int unicode_c, int a2code, int *shift_down_ptr);
-void adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c, int is_up, int shift_down, int ctrl_down, int lock_down);
+void adb_physical_key_update(Kimage *kimage_ptr, int raw_a2code, word32 unicode_c, int is_up);
 void adb_maybe_virtual_key_update(int a2code, int is_up);
 void adb_virtual_key_update(int a2code, int is_up);
 void adb_kbd_repeat_off(void);
@@ -234,7 +235,7 @@ void debug_hit_bp(word32 addr, dword64 dfcyc, word32 maybe_stack, word32 type, i
 int debugger_run_16ms(void);
 void dbg_log_info(dword64 dfcyc, word32 info1, word32 info2, word32 type);
 void debugger_update_list_kpc(void);
-void debugger_key_event(int a2code, int is_up, int shift_down, int ctrl_down, int lock_down);
+void debugger_key_event(Kimage *kimage_ptr, int a2code, int is_up);
 void debugger_page_updown(int isup);
 void debugger_redraw_screen(Kimage *kimage_ptr);
 void debug_draw_debug_line(Kimage *kimage_ptr, int line, int vid_line);
@@ -804,6 +805,7 @@ void update_border_info(void);
 void update_border_line(int st_line_offset, int end_line_offset, int color);
 void video_border_pixel_write(Kimage *kimage_ptr, int starty, int num_lines, int color, int st_off, int end_off);
 word32 video_get_ch_mask(word32 mem_ptr, word32 filt_stat, int reparse);
+void video_update_edges(int line, int left, int right, const char *str);
 void redraw_changed_text(word32 line_bytes, int reparse, word32 *in_wptr, int pixels_per_line, word32 filt_stat);
 void redraw_changed_string(const byte *bptr, word32 line_bytes, word32 ch_mask, word32 *in_wptr, word32 bg_pixel, word32 fg_pixel, int pixels_per_line, int dbl);
 void redraw_changed_gr(word32 line_bytes, int reparse, word32 *in_wptr, int pixels_per_line, word32 filt_stat);

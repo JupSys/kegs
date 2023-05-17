@@ -1,4 +1,4 @@
-const char rcsid_xdriver_c[] = "@(#)$KmKId: xdriver.c,v 1.237 2023-05-04 19:32:06+00 kentd Exp $";
+const char rcsid_xdriver_c[] = "@(#)$KmKId: xdriver.c,v 1.238 2023-05-17 19:49:54+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -51,7 +51,6 @@ typedef struct windowinfo {
 	GC	x_winGC;
 	Atom	delete_atom;
 	int	x_use_shmem;
-	int	x_shift_control_state;
 	int	active;
 	int	width_req;
 	int	pixels_per_line;
@@ -552,7 +551,6 @@ x_init_window(Window_info *win_info_ptr, Kimage *kimage_ptr, char *name_str)
 	win_info_ptr->delete_atom = 0;
 	win_info_ptr->active = 0;
 	win_info_ptr->x_use_shmem = 0;
-	win_info_ptr->x_shift_control_state = 0;
 	win_info_ptr->width_req = width;
 	win_info_ptr->pixels_per_line = width;
 	win_info_ptr->main_height = height;
@@ -1451,10 +1449,7 @@ x_handle_keysym(XEvent *xev_in)
 	a2code = x_keysym_to_a2code(win_info_ptr, (int)keysym, is_up);
 	if(a2code >= 0) {
 		adb_physical_key_update(win_info_ptr->kimage_ptr, a2code,
-			0, is_up,
-			win_info_ptr->x_shift_control_state & ShiftMask,
-			win_info_ptr->x_shift_control_state & ControlMask,
-			win_info_ptr->x_shift_control_state & LockMask);
+			0, is_up);
 	} else if(a2code != -2) {
 		printf("Keysym: %04x of keycode: %02x unknown\n",
 			(word32)keysym, keycode);
@@ -1464,27 +1459,10 @@ x_handle_keysym(XEvent *xev_in)
 int
 x_keysym_to_a2code(Window_info *win_info_ptr, int keysym, int is_up)
 {
-	word32	mask;
 	int	i;
 
 	if(keysym == 0) {
 		return -1;
-	}
-
-	mask = 0;
-	if((keysym == XK_Shift_L) || (keysym == XK_Shift_R)) {
-		mask = ShiftMask;
-	}
-	if(keysym == XK_Caps_Lock) {
-		mask = LockMask;
-	}
-	if((keysym == XK_Control_L) || (keysym == XK_Control_R)) {
-		mask = ControlMask;
-	}
-	if(is_up) {
-		win_info_ptr->x_shift_control_state &= ~mask;
-	} else {
-		win_info_ptr->x_shift_control_state |= mask;
 	}
 
 	/* Look up Apple 2 keycode */
@@ -1506,32 +1484,19 @@ x_keysym_to_a2code(Window_info *win_info_ptr, int keysym, int is_up)
 void
 x_update_modifier_state(Window_info *win_info_ptr, int state)
 {
-	word32	state_xor, shift_down, ctrl_down, lock_down;
-	int	is_up;
+	word32	c025_val;
 
-	state = state & (ControlMask | LockMask | ShiftMask);
-	state_xor = win_info_ptr->x_shift_control_state ^ state;
-	is_up = 0;
-	shift_down = state & ShiftMask;
-	ctrl_down = state & ControlMask;
-	lock_down = state & LockMask;
-	if(state_xor & ControlMask) {
-		is_up = ((state & ControlMask) == 0);
-		adb_physical_key_update(win_info_ptr->kimage_ptr, 0x36, 0,
-				is_up, shift_down, ctrl_down, lock_down);
+	c025_val = 0;
+	if(state & ShiftMask) {
+		c025_val |= 1;
 	}
-	if(state_xor & LockMask) {
-		is_up = ((state & LockMask) == 0);
-		adb_physical_key_update(win_info_ptr->kimage_ptr, 0x39, 0,
-				is_up, shift_down, ctrl_down, lock_down);
+	if(state & ControlMask) {
+		c025_val |= 2;
 	}
-	if(state_xor & ShiftMask) {
-		is_up = ((state & ShiftMask) == 0);
-		adb_physical_key_update(win_info_ptr->kimage_ptr, 0x38, 0,
-				is_up, shift_down, ctrl_down, lock_down);
+	if(state & LockMask) {
+		c025_val |= 4;
 	}
-
-	win_info_ptr->x_shift_control_state = state;
+	adb_update_c025_mask(win_info_ptr->kimage_ptr, c025_val, 7);
 }
 
 void

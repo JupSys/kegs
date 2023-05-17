@@ -1,4 +1,4 @@
-const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.453 2023-05-04 19:35:29+00 kentd Exp $";
+const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.455 2023-05-17 17:41:40+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -88,7 +88,7 @@ int	g_serial_out_masking = 0;
 int	g_serial_modem[2] = { 0, 1 };
 
 int	g_config_iwm_vbl_count = 0;
-const char g_kegs_version_str[] = "1.23";
+const char g_kegs_version_str[] = "1.24";
 
 dword64	g_last_vbl_dfcyc = 0;
 dword64	g_cur_dfcyc = 1;
@@ -128,9 +128,9 @@ word32 g_natcycs_lastvbl = 0;
 int Verbose = 0;
 int Halt_on = 0;
 
-word32 g_mem_size_base = 256*1024;	/* size of motherboard memory */
+word32 g_mem_size_base = 128*1024;	/* size of motherboard memory */
 word32 g_mem_size_exp = 8*1024*1024;	/* size of expansion RAM card */
-word32 g_mem_size_total = 256*1024;	/* Total contiguous RAM from 0 */
+word32 g_mem_size_total = 128*1024;	/* Total contiguous RAM from 0 */
 
 extern word32 g_slow_mem_changed[];
 
@@ -491,6 +491,9 @@ memory_ptr_init()
 	/* This routine may be called several times--each time the ROM file */
 	/*  changes this will be called */
 	mem_size = MY_MIN(0xdf0000, g_mem_size_base + g_mem_size_exp);
+	if(g_rom_version == 0) {			// Apple //e
+		mem_size = g_mem_size_base;
+	}
 	g_mem_size_total = mem_size;
 	if(g_memory_alloc_ptr) {
 		free(g_memory_alloc_ptr);
@@ -1706,7 +1709,7 @@ update_60hz(dword64 dfcyc, double dtime_now)
 	}
 
 	g_dtime_sleep = 0.0;
-	if(dtime_till_expected > (3.0/VBL_RATE)) {
+	if(dtime_till_expected > (1.0/VBL_RATE)) {
 		/* we're running fast, usleep */
 		g_dtime_sleep = dtime_till_expected - (1.0/VBL_RATE);
 	}

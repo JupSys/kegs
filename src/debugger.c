@@ -1,4 +1,4 @@
-const char rcsid_debugger_c[] = "@(#)$KmKId: debugger.c,v 1.56 2023-05-17 17:42:03+00 kentd Exp $";
+const char rcsid_debugger_c[] = "@(#)$KmKId: debugger.c,v 1.57 2023-05-19 13:52:54+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -523,7 +523,7 @@ dbg_help_show_strs(int help_depth, const char *str, const char *help_str)
 	blank_str = "        " "        " "        ";
 	blank_len = (int)strlen(blank_str);		// should be >=17
 	column = 17;
-	len = strlen(str);
+	len = (int)strlen(str);
 	if(help_depth < 0) {
 		help_depth = 0;
 	}
@@ -684,7 +684,7 @@ do_debug_cmd(const char *in_str)
 				}
 				track = g_a2;
 			}
-			iwm_show_track(slot_drive, track, 0.0);
+			iwm_show_track(slot_drive, track, 0);
 			iwm_show_stats(slot_drive);
 			break;
 		case 'E':
@@ -753,7 +753,7 @@ do_debug_cmd(const char *in_str)
 				stop_run_at = g_a1;
 				dbg_printf("Calling add_event for t:%08x\n",
 									g_a1);
-				add_event_stop((double)g_a1);
+				add_event_stop(((dword64)g_a1) << 16);
 				dbg_printf("set stop_run_at = %x\n", g_a1);
 			}
 			break;

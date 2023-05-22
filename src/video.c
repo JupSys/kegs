@@ -1,4 +1,4 @@
-const char rcsid_video_c[] = "@(#)$KmKId: video.c,v 1.200 2023-05-17 17:41:15+00 kentd Exp $";
+const char rcsid_video_c[] = "@(#)$KmKId: video.c,v 1.201 2023-05-19 13:52:30+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -747,7 +747,7 @@ change_border_color(dword64 dfcyc, int val)
 	int	pos;
 
 	pos = g_num_border_changes;
-	g_border_changes[pos].usec = (dfcyc - g_last_vbl_dfcyc) >> 16;
+	g_border_changes[pos].usec = (word32)((dfcyc - g_last_vbl_dfcyc) >> 16);
 	g_border_changes[pos].val = val;
 
 	pos++;
@@ -782,7 +782,7 @@ update_border_info()
 		g_border_changes[limit].val = (g_c034_val & 0xf);
 		limit++;
 	}
-	last_line_offset = ((word32)-1UL << 8) + 44;
+	last_line_offset = (((word32)-1L) << 8) + 44;
 	for(i = 0; i < limit; i++) {
 		usec = g_border_changes[i].usec;
 		dline = usec * drecip_usec;

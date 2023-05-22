@@ -1,4 +1,4 @@
-const char rcsid_sound_c[] = "@(#)$KmKId: sound.c,v 1.146 2023-04-27 14:12:30+00 kentd Exp $";
+const char rcsid_sound_c[] = "@(#)$KmKId: sound.c,v 1.147 2023-05-19 13:52:30+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -670,7 +670,7 @@ sound_play(double dsamps)
 
 			if(c030_state) {
 				/* add in fractional time */
-				ftmp = (int)(fsampnum + (float)1.0);
+				ftmp = (float)(int)(fsampnum + (float)1.0);
 				fpercent += (ftmp - fsampnum);
 			}
 
@@ -1226,7 +1226,7 @@ doc_handle_event(int osc, dword64 dfcyc)
 
 	dsamps = dfcyc * g_dsamps_per_dfcyc;
 
-	DOC_LOG("doc_ev", osc, dfcyc, 0);
+	DOC_LOG("doc_ev", osc, dsamps, 0);
 
 	g_doc_regs[osc].event = 0;
 
@@ -1551,7 +1551,8 @@ wave_end_estimate(int osc, double eff_dsamps, double dsamps)
 		rptr->event = 1;
 		rptr->dsamp_ev = event_dsamp;
 		rptr->dsamp_ev2 = dsamps;
-		event_dfcyc = (event_dsamp * dfcycs_per_samp) + 65536LL;
+		event_dfcyc = (dword64)(event_dsamp * dfcycs_per_samp) +
+								65536LL;
 		add_event_doc(event_dfcyc, osc);
 	}
 
@@ -1686,7 +1687,7 @@ doc_recalc_sound_parms(int osc, double dsamps)
 	res = wave_size & 7;
 
 	shifted_size = size << SND_PTR_SHIFT;
-	cur_start = (rptr->waveptr << (8 + SND_PTR_SHIFT)) & (-shifted_size);
+	cur_start = (rptr->waveptr << (8 + SND_PTR_SHIFT)) & (0-shifted_size);
 
 	dtmp1 = dfreq * (DOC_SCAN_RATE * g_drecip_audio_rate);
 	dacc = (double)(1 << (20 - (17 - sz + res)));

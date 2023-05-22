@@ -1,4 +1,4 @@
-const char rcsid_mockingboard_c[] = "@(#)$KmKId: mockingboard.c,v 1.24 2023-04-27 14:14:42+00 kentd Exp $";
+const char rcsid_mockingboard_c[] = "@(#)$KmKId: mockingboard.c,v 1.25 2023-05-19 13:54:02+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -136,7 +136,7 @@ mock_update_timers(int doit, dword64 dfcyc)
 		timer_eff = (timer_val & 0x1ffff);
 		dleft = ddiff;
 		timer_latch = mos6522ptr->timer1_latch + 2;
-		dbg_log_info(dfcyc, dleft, timer_val, 0xcb);
+		dbg_log_info(dfcyc, (word32)dleft, timer_val, 0xcb);
 		dbg_log_info(dfcyc, ier, timer_latch, 0xcb);
 		if(dleft < timer_eff) {
 			// Move ahead only a little, no triggering
@@ -149,7 +149,7 @@ mock_update_timers(int doit, dword64 dfcyc)
 				// IFR not set yet, prepare an event
 				timer1_int_dusec = dusec +
 							(timer_val & 0x1ffff);
-				dbg_log_info(dfcyc, timer1_int_dusec,
+				dbg_log_info(dfcyc, (word32)timer1_int_dusec,
 							timer_val, 0xcd);
 				// printf("t1_int_dusec: %016llx\n",
 				//			timer1_int_dusec);
@@ -170,7 +170,8 @@ mock_update_timers(int doit, dword64 dfcyc)
 			if(dleft >= timer_latch) {
 				// It's rolled over several times, remove those
 				dleft = dleft % timer_latch;
-				dbg_log_info(dfcyc, dleft, timer_latch, 0xcc);
+				dbg_log_info(dfcyc, (word32)dleft, timer_latch,
+									0xcc);
 			}
 			if(dleft == 0) {
 				dleft = timer_latch;
@@ -262,7 +263,8 @@ mock_update_timers(int doit, dword64 dfcyc)
 			//	closest_int_dusec, closest_int_dusec);
 			add_event_mockingboard(closest_int_dusec << 16);
 			g_mockingboard_event_int_dusec = closest_int_dusec;
-			dbg_log_info(dfcyc, closest_int_dusec - (dfcyc >> 16),
+			dbg_log_info(dfcyc,
+				(word32)(closest_int_dusec - (dfcyc >> 16)),
 								0, 0xc1);
 		}
 	}

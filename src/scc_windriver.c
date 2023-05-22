@@ -1,4 +1,4 @@
-const char rcsid_scc_windriver_c[] = "@(#)$KmKId: scc_windriver.c,v 1.10 2023-05-04 19:33:31+00 kentd Exp $";
+const char rcsid_scc_windriver_c[] = "@(#)$KmKId: scc_windriver.c,v 1.11 2023-05-19 14:00:22+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -178,7 +178,7 @@ scc_serial_win_fill_readbuf(int port, int space_left, dword64 dfcyc)
 	}
 
 	if(ret && (bytes_read > 0)) {
-		for(i = 0; i < bytes_read; i++) {
+		for(i = 0; i < (int)bytes_read; i++) {
 			scc_add_to_readbuf(port, tmp_buf[i], dfcyc);
 		}
 	}

@@ -31,6 +31,10 @@ Linker->Input, then on the right, the first item "Additional Dependencies:"
 add: "wsock32.lib;dsound.lib;winmm.lib;".  I added it near the end, before
 odbccp32.lib.
 
+Set Platform: x86, and add the same libraries for Win32.
+To fix "unresolved external symbol _WinMain@16 referenced in function",
+
+
 To compile:
 
 mkkegswinmac -j 20

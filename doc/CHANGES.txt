@@ -1,6 +1,16 @@
 
+Changes in KEGS v1.26 since v1.25 (05/21/23)
+- Fix Win64 Dynapro issues (O_BINARY, setvbuf was causing a crash).
+- Fix a KEGS bug in the Bank $E0 memory map which could corrupt data in the
+	Apple IIgs memory from $E0/6000 - $E0/A000.
+
+
+Changes in KEGS v1.25 since v1.24 (05/21/23)
+- Actual Win32 support.  1.24 was only Win64.
+
+
 Changes in KEGS v1.24 since v1.23 (05/17/23)
-- Win32 support.  kegswin.exe now part of the standard release.  The Windows
+- Win64 support.  kegswin.exe now part of the standard release.  The Windows
 	port is still beta quality.
 - Try to fix jerky video to make KEGS seem smoother.
 

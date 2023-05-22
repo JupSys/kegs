@@ -1,5 +1,5 @@
 #ifdef INCLUDE_RCSID_C
-const char rcsid_defc_h[] = "@(#)$KmKId: defc.h,v 1.134 2023-05-17 17:41:28+00 kentd Exp $";
+const char rcsid_defc_h[] = "@(#)$KmKId: defc.h,v 1.136 2023-05-22 19:50:07+00 kentd Exp $";
 #endif
 
 /************************************************************************/
@@ -72,6 +72,14 @@ typedef unsigned long long dword64;
 
 #ifdef SOLARIS
 # include <sys/filio.h>
+#endif
+
+#ifdef _WIN32
+# include <direct.h>
+# include <io.h>
+# pragma warning(disable : 4996)	/* open() is deprecated...sigh */
+int ftruncate(int fd, word32 length);
+int lstat(const char *path, struct stat *bufptr);
 #endif
 
 #ifndef O_BINARY
@@ -310,6 +318,7 @@ STRUCT(Lzw_state) {
 #define VERBOSE_TEST	0x100
 #define VERBOSE_VIDEO	0x200
 #define VERBOSE_MAC	0x400
+#define VERBOSE_DYNA	0x800
 
 #ifdef NO_VERB
 # define DO_VERBOSE	0
@@ -328,6 +337,7 @@ STRUCT(Lzw_state) {
 #define test_printf	if(DO_VERBOSE && (Verbose & VERBOSE_TEST)) printf
 #define vid_printf	if(DO_VERBOSE && (Verbose & VERBOSE_VIDEO)) printf
 #define mac_printf	if(DO_VERBOSE && (Verbose & VERBOSE_MAC)) printf
+#define dyna_printf	if(DO_VERBOSE && (Verbose & VERBOSE_DYNA)) printf
 
 
 #define HALT_ON_SCAN_INT	0x001

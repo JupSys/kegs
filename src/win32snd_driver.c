@@ -1,4 +1,4 @@
-const char rcsid_win32snd_driver_c[] = "@(#)$KmKId: win32snd_driver.c,v 1.11 2023-05-17 14:51:47+00 kentd Exp $";
+const char rcsid_win32snd_driver_c[] = "@(#)$KmKId: win32snd_driver.c,v 1.12 2023-05-19 14:01:33+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -79,7 +79,7 @@ handle_wav_snd(HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance,
 		if(lpwavehdr->dwFlags == (WHDR_DONE | WHDR_PREPARED)) {
 			lpwavehdr->dwUser = FALSE;
 		}
-		pos = lpwavehdr - &g_wavehdr[0];
+		pos = (int)(lpwavehdr - &g_wavehdr[0]);
 		// printf("At %.3f, pos %d is done\n", get_dtime(), pos);
 		if(pos == g_wavehdr_rd_pos) {
 			pos = (pos + 1) % NUM_WAVE_HEADERS;
@@ -153,7 +153,7 @@ child_sound_init_win32()
 	g_audio_rate = wavefmt.nSamplesPerSec;
 	blen = (((g_audio_rate * block_align) / 60) * 5) / 4;
 		// Size buffer 25% larger than expected, to add some margin
-	blen = (blen + 15) & -16UL;
+	blen = (blen + 15) & -16L;
 
 	g_win32snd_buflen = blen;
 	bptr = malloc(blen * NUM_WAVE_HEADERS);
@@ -165,7 +165,7 @@ child_sound_init_win32()
 	for(i = 0; i < NUM_WAVE_HEADERS; i++) {
 		memset(&g_wavehdr[i], 0, sizeof(WAVEHDR));
 		g_wavehdr[i].dwUser = FALSE;
-		g_wavehdr[i].lpData = &(bptr[i * blen]);
+		g_wavehdr[i].lpData = (char *)&(bptr[i * blen]);
 		g_wavehdr[i].dwBufferLength = blen;
 		g_wavehdr[i].dwFlags = 0;
 		g_wavehdr[i].dwLoops = 0;

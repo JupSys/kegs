@@ -1,4 +1,4 @@
-const char rcsid_moremem_c[] = "@(#)$KmKId: moremem.c,v 1.287 2023-05-04 19:33:31+00 kentd Exp $";
+const char rcsid_moremem_c[] = "@(#)$KmKId: moremem.c,v 1.289 2023-05-22 17:14:55+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -996,7 +996,7 @@ setup_pageinfo()
 	fixup_any_bank_any_page(0xe00c, 0x14, mem0rd + 0x0c00, mem0rd + 0x0c00);
 	fixup_any_bank_any_page(0xe020, 0x80, mem0rd + 0x2000,
 						mem0rd + 0x2000 + BANK_SHADOW);
-	fixup_any_bank_any_page(0xe0a0, 0x60, mem0rd + 0x6000, mem0rd + 0x6000);
+	fixup_any_bank_any_page(0xe0a0, 0x60, mem0rd + 0xa000, mem0rd + 0xa000);
 
 	mem0rd = &(g_slow_memory_ptr[0x10000]);
 	fixup_any_bank_any_page(0xe100, 0x04, mem0rd + 0x0000, mem0rd + 0x0000);
@@ -2028,7 +2028,7 @@ io_write(word32 loc, int val, dword64 *cyc_ptr)
 		case 0x6b: /* 0xc06b */
 			UNIMPL_WRITE;
 		case 0x6c: /* 0xc06c */
-			g_c06c_latched_cyc = dfcyc >> 16;
+			g_c06c_latched_cyc = (word32)(dfcyc >> 16);
 			return;
 		case 0x6d: /* 0xc06d */
 			// Affect what reads to $C02C can see, only $40 now

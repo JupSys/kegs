@@ -1,4 +1,4 @@
-const char rcsid_scc_c[] = "@(#)$KmKId: scc.c,v 1.57 2023-05-04 19:35:56+00 kentd Exp $";
+const char rcsid_scc_c[] = "@(#)$KmKId: scc.c,v 1.58 2023-05-19 13:52:54+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -450,9 +450,10 @@ show_scc_state()
 				scc_ptr->reg[j], scc_ptr->reg[j+1],
 				scc_ptr->reg[j+2], scc_ptr->reg[j+3]);
 		}
-		printf("state: %d, accfd: %d, rdwrfd: %d, host:%p, host2:%p\n",
-			scc_ptr->state, scc_ptr->accfd, scc_ptr->rdwrfd,
-			scc_ptr->host_handle, scc_ptr->host_handle2);
+		printf("state: %d, accfd: %d, rdwrfd:%llx, host:%p, host2:%p\n",
+			scc_ptr->state, scc_ptr->accfd,
+			(dword64)scc_ptr->rdwrfd, scc_ptr->host_handle,
+			scc_ptr->host_handle2);
 		printf("in_rdptr: %04x, in_wr:%04x, out_rd:%04x, out_wr:%04x\n",
 			scc_ptr->in_rdptr, scc_ptr->in_wrptr,
 			scc_ptr->out_rdptr, scc_ptr->out_wrptr);
@@ -886,7 +887,7 @@ scc_maybe_br_event(int port, dword64 dfcyc)
 	}
 
 	scc_ptr->br_event_pending = 1;
-	add_event_scc(dfcyc + br_dcycs * 65536.0,
+	add_event_scc(dfcyc + (dword64)(br_dcycs * 65536.0),
 					SCC_MAKE_EVENT(port, SCC_BR_EVENT));
 }
 
@@ -973,7 +974,7 @@ scc_maybe_rx_event(int port, dword64 dfcyc)
 	scc_maybe_rx_int(port);
 	rx_dcycs = scc_ptr->rx_dcycs;
 	scc_ptr->rx_event_pending = 1;
-	add_event_scc(dfcyc + rx_dcycs*65536.0,
+	add_event_scc(dfcyc + (dword64)(rx_dcycs*65536.0),
 					SCC_MAKE_EVENT(port, SCC_RX_EVENT));
 }
 
@@ -1038,7 +1039,7 @@ scc_maybe_tx_event(int port, dword64 dfcyc)
 		scc_evaluate_ints(port);
 		tx_dcycs = scc_ptr->tx_dcycs;
 		scc_ptr->tx_event_pending = 1;
-		add_event_scc(dfcyc + tx_dcycs * 65536.0,
+		add_event_scc(dfcyc + (dword64)(tx_dcycs * 65536.0),
 				SCC_MAKE_EVENT(port, SCC_TX_EVENT));
 	}
 }

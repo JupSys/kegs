@@ -1,4 +1,4 @@
-const char rcsid_paddles_c[] = "@(#)$KmKId: paddles.c,v 1.20 2023-05-04 19:33:31+00 kentd Exp $";
+const char rcsid_paddles_c[] = "@(#)$KmKId: paddles.c,v 1.21 2023-05-19 13:52:54+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -160,7 +160,7 @@ paddle_update_trigger_dcycs(dword64 dfcyc)
 		if(val >= 255) {
 			val = 280;	/* increase range */
 		}
-		trig_dfcyc = dfcyc + ((val * 11.04) * 65536);
+		trig_dfcyc = dfcyc + (dword64)((val * (2816/255.0)) * 65536);
 		g_paddle_dfcyc[i] = trig_dfcyc;
 		if(i < 2) {
 			dbg_log_info(dfcyc, (scale << 16) | (val & 0xffff),

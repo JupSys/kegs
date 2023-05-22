@@ -1,4 +1,4 @@
-const char rcsid_smartport_c[] = "@(#)$KmKId: smartport.c,v 1.54 2023-05-04 19:33:31+00 kentd Exp $";
+const char rcsid_smartport_c[] = "@(#)$KmKId: smartport.c,v 1.55 2023-05-19 13:52:30+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -67,7 +67,7 @@ smartport_error(void)
 	}
 }
 void
-smartport_log(word32 start_addr, int cmd, int rts_addr, int cmd_list)
+smartport_log(word32 start_addr, word32 cmd, word32 rts_addr, word32 cmd_list)
 {
 	int	pos;
 
@@ -502,13 +502,13 @@ do_c70a(word32 arg0)
 		dsize = g_iwm.smartport[unit].dimage_size;
 		dsize = (dsize + 511) / 512;
 
-		smartport_log(0, unit, dsize, 0);
+		smartport_log(0, unit, (word32)dsize, 0);
 		dbg_log_info(g_cur_dfcyc, ((unit & 0xff) << 8) | (cmd & 0xff),
-							dsize, 0x1c700);
+							(word32)dsize, 0x1c700);
 
 		ret = 0;
 		engine.xreg = dsize & 0xff;
-		engine.yreg = dsize >> 8;
+		engine.yreg = (word32)(dsize >> 8);
 	} else if(cmd == 0x01) {
 		smartport_log(0, unit, buf, blk);
 		ret = do_read_c7(unit, buf, blk);
@@ -560,7 +560,7 @@ do_read_c7(int unit_num, word32 buf, word32 blk)
 #endif
 		return 0x2f;
 	}
-	if(((blk + 1) * 0x200LL) > (dimage_start + dimage_size)) {
+	if(((blk + 1) * 0x200ULL) > (dimage_start + dimage_size)) {
 		halt_printf("Tried to read past %08llx on disk (blk:%04x)\n",
 			dimage_start + dimage_size, blk);
 		smartport_error();
@@ -574,7 +574,7 @@ do_read_c7(int unit_num, word32 buf, word32 blk)
 			local_buf[i] = bptr[i];
 		}
 	} else {
-		dret = lseek(fd, dimage_start + blk*0x200ULL, SEEK_SET);
+		dret = kegs_lseek(fd, dimage_start + blk*0x200ULL, SEEK_SET);
 		if(dret != (dimage_start + blk*0x200ULL)) {
 			halt_printf("lseek ret %08llx, errno:%d\n", dret,
 									errno);
@@ -651,7 +651,7 @@ do_write_c7(int unit_num, word32 buf, word32 blk)
 	if(dsk->dynapro_info_ptr) {
 		dynapro_write(dsk, &local_buf[0], blk*0x200UL, 0x200);
 	} else {
-		dret = lseek(fd, dimage_start + blk*0x200ULL, SEEK_SET);
+		dret = kegs_lseek(fd, dimage_start + blk*0x200ULL, SEEK_SET);
 		if(dret != (dimage_start + blk*0x200ULL)) {
 			halt_printf("lseek returned %08llx, errno: %d\n", dret,
 								errno);
@@ -721,7 +721,7 @@ do_format_c7(int unit_num)
 	}
 
 	if(!dsk->dynapro_info_ptr) {
-		dret = lseek(fd, dimage_start, SEEK_SET);
+		dret = kegs_lseek(fd, dimage_start, SEEK_SET);
 		if(dret != dimage_start) {
 			halt_printf("lseek returned %08llx, errno: %d\n", dret,
 									errno);

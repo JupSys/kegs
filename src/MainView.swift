@@ -1,4 +1,4 @@
-// $KmKId: MainView.swift,v 1.37 2023-05-17 19:42:10+00 kentd Exp $
+// $KmKId: MainView.swift,v 1.38 2023-05-22 15:51:09+00 kentd Exp $
 
 //	Copyright 2019-2023 by Kent Dickey
 //	This code is covered by the GNU GPL v3
@@ -126,7 +126,7 @@ class MainView: NSView {
 		}
 		adb_update_c025_mask(kimage_ptr, c025_val, UInt32(0xc7));
 		current_flags = flags
-		print("flagsChanged: \(flags) and keycode: \(event.keyCode)")
+		//print("flagsChanged: \(flags) and keycode: \(event.keyCode)")
 	}
 	override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
 		// This is to let the first click when changing to this window

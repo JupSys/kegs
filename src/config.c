@@ -1,4 +1,4 @@
-const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.136 2023-05-17 17:42:30+00 kentd Exp $";
+const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.138 2023-05-21 19:52:35+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -639,7 +639,7 @@ cfg_err_vprintf(const char *pre_str, const char *fmt, va_list ap)
 	if(pre_str && *pre_str) {
 		cfg_strncpy(bufptr, pre_str, CFG_ERR_BUFSIZE);
 		cfg_strlcat(bufptr, " error: ", CFG_ERR_BUFSIZE);
-		len = strlen(bufptr);
+		len = (int)strlen(bufptr);
 		bufsize = CFG_ERR_BUFSIZE - len;
 	}
 	if(bufsize > 0) {
@@ -926,8 +926,8 @@ void
 cfg_load_charrom()
 {
 	byte	buffer[4096];
-	dword64	dsize;
-	word32	ret, upos;
+	dword64	dsize, dret;
+	word32	upos;
 	int	fd;
 
 	printf("Loading character ROM from: %s\n", g_cfg_charrom_path);
@@ -942,8 +942,8 @@ cfg_load_charrom()
 		g_cfg_charrom_pos = 0;
 		return;
 	}
-	ret = cfg_read_from_fd(fd, &buffer[0], upos, 4096);
-	if(ret != 0) {
+	dret = cfg_read_from_fd(fd, &buffer[0], upos, 4096);
+	if(dret != 0) {
 		prepare_a2_romx_font(&buffer[0]);
 	}
 }
@@ -1739,7 +1739,7 @@ insert_disk(int slot, int drive, const char *name, int ejected,
 
 	if(image_type == DSK_TYPE_WOZ) {
 		// Special handling
-		ret = woz_open(dsk, 0.0);
+		ret = woz_open(dsk, 0);
 		if(!ret) {
 			iwm_eject_disk(dsk);
 			return;
@@ -1757,17 +1757,17 @@ insert_disk(int slot, int drive, const char *name, int ejected,
 		len = 0x1000;
 		if(dsk->image_type == DSK_TYPE_NIB) {
 			// Weird .nib format, has no sync bits
-			len = (dsk->dimage_size / 35);
+			len = (int)(dsk->dimage_size / 35);
 			for(i = 0; i < 35; i++) {
 				disk_unix_to_nib(dsk, 4*i, dunix_pos, len,
-								len * 8, 0.0);
+								len * 8, 0);
 				dunix_pos += len;
 			}
 		} else {
 			for(i = 0; i < 35; i++) {
 				len_bits = iwm_get_default_track_bits(dsk, 4*i);
 				disk_unix_to_nib(dsk, 4*i, dunix_pos, len,
-								len_bits, 0.0);
+								len_bits, 0);
 				dunix_pos += len;
 			}
 		}
@@ -1790,7 +1790,7 @@ insert_disk(int slot, int drive, const char *name, int ejected,
 			len_bits = iwm_get_default_track_bits(dsk, i);
 			iwm_printf("Trk: %d.%d = unix: %08llx, %04x, %04x\n",
 				i>>1, i & 1, dunix_pos, len, len_bits);
-			disk_unix_to_nib(dsk, i, dunix_pos, len, len_bits, 0.0);
+			disk_unix_to_nib(dsk, i, dunix_pos, len, len_bits, 0);
 			dunix_pos += len;
 
 			iwm_printf(" trk_bits:%05x\n", dsk->trks[i].track_bits);
@@ -1816,23 +1816,27 @@ cfg_get_fd_size(int fd)
 	return stat_buf.st_size;
 }
 
-word32
-cfg_read_from_fd(int fd, byte *bufptr, dword64 dpos, word32 size)
+dword64
+cfg_read_from_fd(int fd, byte *bufptr, dword64 dpos, dword64 dsize)
 {
-	dword64	dret;
-	word32	off;
+	dword64	dret, doff;
+	word32	this_len;
 
-	dret = lseek(fd, dpos, SEEK_SET);
+	dret = kegs_lseek(fd, dpos, SEEK_SET);
 	if(dret != dpos) {
 		printf("lseek failed: %lld\n", dret);
 		return 0;
 	}
-	off = 0;
+	doff = 0;
 	while(1) {
-		if(off >= size) {
+		if(doff >= dsize) {
 			break;
 		}
-		dret = read(fd, bufptr + off, size - off);
+		this_len = 1UL << 30;
+		if((dsize - doff) < this_len) {
+			this_len = (word32)(dsize - doff);
+		}
+		dret = read(fd, bufptr + doff, this_len);
 		if((dret + 1) == 0) {		// dret==-1
 			printf("read failed\n");
 			return 0;
@@ -1841,22 +1845,22 @@ cfg_read_from_fd(int fd, byte *bufptr, dword64 dpos, word32 size)
 			printf("Unexpected end of file\n");
 			return 0;
 		}
-		off += dret;
+		doff += dret;
 	}
-	return off;
+	return doff;
 }
 
-word32
-cfg_write_to_fd(int fd, byte *bufptr, dword64 dpos, word32 size)
+dword64
+cfg_write_to_fd(int fd, byte *bufptr, dword64 dpos, dword64 dsize)
 {
 	dword64	dret;
 
-	dret = lseek(fd, dpos, SEEK_SET);
+	dret = kegs_lseek(fd, dpos, SEEK_SET);
 	if(dret != dpos) {
 		printf("lseek failed: %lld\n", dret);
 		return 0;
 	}
-	return must_write(fd, bufptr, size);
+	return must_write(fd, bufptr, dsize);
 }
 
 int
@@ -1864,7 +1868,7 @@ cfg_partition_maybe_add_dotdot()
 {
 	int	part_len;
 
-	part_len = strlen(&(g_cfg_part_path[0]));
+	part_len = (int)strlen(&(g_cfg_part_path[0]));
 	if(part_len > 0) {
 		// Add .. entry here
 		cfg_file_add_dirent(&g_cfg_partitionlist, "..", 1, 0, 0, 0, 0);
@@ -1895,7 +1899,11 @@ cfg_partition_name_check(const byte *name_ptr, int name_len)
 int
 cfg_partition_read_block(int fd, void *buf, dword64 blk, int blk_size)
 {
-	return (int)cfg_read_from_fd(fd, buf, blk * blk_size, blk_size);
+	if(!cfg_read_from_fd(fd, buf, blk * blk_size, blk_size)) {
+		// Read failed
+		return 0;
+	}
+	return blk_size;
 }
 
 int
@@ -2140,7 +2148,7 @@ cfg_stat(char *path, struct stat *sb, int do_lstat)
 	len = 0;
 
 	/* Windows doesn't like to stat paths ending in a /, so remove it */
-	len = strlen(path);
+	len = (int)strlen(path);
 #ifdef _WIN32
 	if((len > 1) && (path[len - 1] == '/') ) {
 		path[len - 1] = 0;	/* remove the slash */
@@ -2897,8 +2905,8 @@ cfg_dup_image_selected()
 		cfg_write_to_fd(fd, dsk->raw_data, 0, dsize);
 		close(fd);
 	} else {
-		bufptr = malloc(dsize);
-		if(bufptr != 0) {
+		bufptr = malloc((size_t)dsize);
+		if((bufptr != 0) && ((size_t)dsize == dsize)) {
 			dret = cfg_read_from_fd(dsk->fd, bufptr, 0, dsize);
 			if(dret == dsize) {
 				cfg_write_to_fd(fd, bufptr, 0, dsize);
@@ -2933,7 +2941,7 @@ int
 cfg_create_new_image_act(const char *str, int type, int size_blocks)
 {
 	byte	buf[512];
-	word32	val;
+	dword64	dret;
 	int	fd, ret;
 	int	i;
 
@@ -2957,8 +2965,8 @@ cfg_create_new_image_act(const char *str, int type, int size_blocks)
 		(void)woz_new(fd, str, size_blocks/2);
 	} else {
 		for(i = 0; i < size_blocks; i++) {
-			val = cfg_write_to_fd(fd, &(buf[0]), i * 512U, 512);
-			if(val != 512) {
+			dret = cfg_write_to_fd(fd, &(buf[0]), i * 512U, 512);
+			if(dret != 512) {
 				ret = -1;
 				break;
 			}
@@ -3198,8 +3206,8 @@ cfg_strlcat(char *dstptr, const char *srcptr, int dstsize)
 	// Concat srcptr to the end of dstptr, ensuring a null within dstsize
 	//  Return the total buffer size that would be needed, even if dstsize
 	//  is too small.  Compat with strlcat()
-	destlen = strlen(dstptr);
-	srclen = strlen(srcptr);
+	destlen = (int)strlen(dstptr);
+	srclen = (int)strlen(srcptr);
 	ret = destlen + srclen;
 	dstsize--;
 	if(destlen >= dstsize) {
@@ -3245,7 +3253,7 @@ cfg_str_basename(const char *str)
 	int	i;
 
 	// If str is /aa/bb/cc, this routine returns cc
-	len = strlen(str);
+	len = (int)strlen(str);
 	while(len && (str[len - 1] == '/')) {
 		len--;		// Ignore trailing '/' if there are any
 	}

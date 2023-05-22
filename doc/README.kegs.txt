@@ -25,7 +25,8 @@ KEGS QuickStart:
 ---------------
 
 Run the KEGSMAC executable (see README.mac.txt on how to get around Mac
-security restrictions), or kegswin.exe on Windows, or xkegs on Linux.
+security restrictions), or kegswin.exe on Windows 10 or later, or xkegs on
+Linux.
 
 You must download and place a ROM file in the directory you run KEGS from,
 or in your $HOME directory.  GS ROM version 01 should be named ROM.01, and

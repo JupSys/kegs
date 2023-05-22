@@ -11,7 +11,7 @@
 /************************************************************************/
 
 #ifdef INCLUDE_RCSID_C
-const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.133 2023-05-17 17:42:42+00 kentd Exp $";
+const char rcsid_protos_base_h[] = "@(#)$KmKId: protos_base.h,v 1.136 2023-05-21 20:06:32+00 kentd Exp $";
 #endif
 
 #ifdef __GNUC__
@@ -165,8 +165,8 @@ void config_generate_config_kegs_name(char *outstr, int maxlen, Disk *dsk, int w
 void config_write_config_kegs_file(void);
 void insert_disk(int slot, int drive, const char *name, int ejected, const char *partition_name, int part_num, word32 dynamic_blocks);
 dword64 cfg_get_fd_size(int fd);
-word32 cfg_read_from_fd(int fd, byte *bufptr, dword64 dpos, word32 size);
-word32 cfg_write_to_fd(int fd, byte *bufptr, dword64 dpos, word32 size);
+dword64 cfg_read_from_fd(int fd, byte *bufptr, dword64 dpos, dword64 dsize);
+dword64 cfg_write_to_fd(int fd, byte *bufptr, dword64 dpos, dword64 dsize);
 int cfg_partition_maybe_add_dotdot(void);
 int cfg_partition_name_check(const byte *name_ptr, int name_len);
 int cfg_partition_read_block(int fd, void *buf, dword64 blk, int blk_size);
@@ -378,7 +378,7 @@ int iwm_read_enable2_handshake(dword64 dfcyc);
 void iwm_write_enable2(int val);
 word32 iwm_fastemul_start_write(Disk *dsk, dword64 dfcyc);
 word32 iwm_read_data_fast(Disk *dsk, dword64 dfcyc);
-word32 iwm_return_rand_data(Disk *dsk, dword64 dfcyc);
+dword64 iwm_return_rand_data(Disk *dsk, dword64 dfcyc);
 dword64 iwm_get_raw_bits(Disk *dsk, word32 bit_pos, int num_bits, dword64 *dsyncs_ptr);
 word32 iwm_calc_bit_diff(word32 first, word32 last, word32 track_bits);
 word32 iwm_calc_bit_sum(word32 bit_pos, int add_ival, word32 track_bits);
@@ -553,12 +553,13 @@ int kegs_vprintf(const char *fmt, va_list ap);
 dword64 must_write(int fd, byte *bufptr, dword64 dsize);
 void clear_fatal_logs(void);
 char *kegs_malloc_str(const char *in_str);
+dword64 kegs_lseek(int fd, dword64 offs, int whence);
 
 
 
 /* smartport.c */
 void smartport_error(void);
-void smartport_log(word32 start_addr, int cmd, int rts_addr, int cmd_list);
+void smartport_log(word32 start_addr, word32 cmd, word32 rts_addr, word32 cmd_list);
 void do_c70d(word32 arg0);
 void do_c70a(word32 arg0);
 int do_read_c7(int unit_num, word32 buf, word32 blk);
@@ -662,6 +663,8 @@ void unshk_dsk_raw_data(Disk *dsk);
 
 
 /* undeflate.c */
+void *undeflate_realloc(void *ptr, dword64 dsize);
+void *undeflate_malloc(dword64 dsize);
 void show_bits(unsigned *llptr, int nl);
 void show_huftb(unsigned *tabptr, int bits);
 void undeflate_init_len_dist_tab(word32 *tabptr, dword64 drepeats, word32 start);
@@ -679,7 +682,7 @@ word32 *undeflate_dynamic_table(byte *cptr, word32 *bit_pos_ptr, byte *cptr_base
 byte *undeflate_block(Disk *dsk, byte *cptr, word32 *bit_pos_ptr, byte *cptr_base, byte *cptr_end);
 byte *undeflate_gzip_header(Disk *dsk, byte *cptr, word32 compr_size);
 void undeflate_gzip(Disk *dsk, const char *name_str);
-byte *undeflate_zipfile_blocks(Disk *dsk, byte *cptr, word32 compr_size);
+byte *undeflate_zipfile_blocks(Disk *dsk, byte *cptr, dword64 dcompr_size);
 int undeflate_zipfile(Disk *dsk, int fd, dword64 dlocal_header_off, dword64 uncompr_dsize, dword64 compr_dsize);
 int undeflate_zipfile_search(byte *bptr, byte *cmp_ptr, int size, int cmp_len, int min_size);
 int undeflate_zipfile_make_list(int fd);

@@ -1,4 +1,4 @@
-const char rcsid_windriver_c[] = "@(#)$KmKId: windriver.c,v 1.20 2023-05-17 22:36:58+00 kentd Exp $";
+const char rcsid_windriver_c[] = "@(#)$KmKId: windriver.c,v 1.21 2023-05-19 14:01:24+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -256,7 +256,7 @@ win_event_mouse(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		return;
 	}
 
-	flags = wParam;
+	flags = (word32)wParam;
 	x = LOWORD(lParam);
 	y = HIWORD(lParam);
 
@@ -295,8 +295,8 @@ win_event_key(HWND hwnd, WPARAM wParam, LPARAM lParam, int down)
 		return;
 	}
 	kimage_ptr = win_info_ptr->kimage_ptr;
-	raw_vk = wParam;
-	flags = lParam >> 16;
+	raw_vk = (word32)wParam;
+	flags = HIWORD(lParam);
 #if 0
 	printf("win_event_key: raw:%04x lParam:%08x d:%d flags:%08x\n",
 		raw_vk, (word32)lParam, down, flags);
@@ -609,7 +609,6 @@ check_input_events()
 	POINT	pt;
 	BOOL	ret;
 	Window_info *win_info_ptr;
-	int	hide, warp;
 
 	while(PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
 		if(GetMessage(&msg, 0, 0, 0) > 0) {
@@ -651,11 +650,8 @@ check_input_events()
 void
 win_video_init(int mdepth)
 {
-	Kimage	*kimage_ptr;
 	WNDCLASS wndclass;
-	RECT	rect, win_rect;
-	int	height, width, ret, a2code, extra_size;
-	int	w_flags;
+	int	a2code;
 	int	i;
 
 	video_set_palette();
@@ -727,13 +723,12 @@ void
 win_create_window(Window_info *win_info_ptr)
 {
 	HWND	win_hwnd;
-	WNDCLASS wndclass;
-	RECT	rect, win_rect;
+	RECT	rect;
 	BITMAPINFO *bmapinfo_ptr;
 	BITMAPINFOHEADER *bmaphdr_ptr;
 	HBITMAP	win_dev_handle;
 	Kimage	*kimage_ptr;
-	int	height, width, ret, a2code, extra_width, extra_height;
+	int	height, width, extra_width, extra_height;
 	int	extra_size, w_flags;
 
 	kimage_ptr = win_info_ptr->kimage_ptr;
@@ -924,7 +919,6 @@ int
 opendir_int(DIR *dirp, const char *in_filename)
 {
 	HANDLE	handle1;
-	BOOL	ret;
 	wchar_t	*wcstr;
 	char	*filename;
 	size_t	ret_val;
@@ -932,7 +926,7 @@ opendir_int(DIR *dirp, const char *in_filename)
 	int	i;
 
 	printf("opendir on %s\n", in_filename);
-	len = strlen(in_filename);
+	len = (int)strlen(in_filename);
 	buflen = len + 8;
 	if(buflen >= sizeof(dirp->dirent.d_name)) {
 		printf("buflen %d >= d_name %d\n", buflen,
@@ -951,7 +945,7 @@ opendir_int(DIR *dirp, const char *in_filename)
 			filename[i] = '\\';
 		}
 	}
-	len = strlen(filename);
+	len = (int)strlen(filename);
 	wcstr = malloc(buflen * 2);
 	(void)mbstowcs_s(&ret_val, wcstr, buflen, filename, _TRUNCATE);
 	handle1 = FindFirstFileW(wcstr, dirp->find_data_ptr);

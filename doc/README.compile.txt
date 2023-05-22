@@ -1,9 +1,9 @@
-# $Id: README.compile.txt,v 1.24 2023/05/17 20:24:19 kentd Exp $
+# $Id: README.compile.txt,v 1.25 2023/05/21 20:11:42 kentd Exp $
 
 General build instructions:
 --------------------------
 
-KEGS supports Mac OS X, Linux, and Win32 compiles.
+KEGS supports Mac OS X, Linux, and Win64 compiles.
 
 For Mac and Linux, the build is done from the command line using a "make"
 utility.  There's a default Makefile, which should work for nearly any
@@ -121,12 +121,13 @@ sudo sysctl  kern.sysv.shmmax=67108864          # One segment max: 64MB
 sudo sysctl  kern.sysv.shmall=131072            # in 4KB pages Total mem: 512MB
 
 
-Windows WIN32 build instructions (Windows 10 and later)
+Windows WIN64 build instructions (Windows 10 and later)
 -------------------------------------------------------
 
 KEGS is easy to compile, but you must install Visual Studio (Community Edition)
 first, which is free.  https://visualstudio.microsoft.com/vs/community/
-I'm using the 2022 version.
+I'm using the 2022 version.  The executable in the KEGS release was built
+on Windows 10 for 64-bit Windows.
 
 Open a PowerShell (or any terminal window) and go to where you unpacked
 the KEGS source:

@@ -1,4 +1,4 @@
-const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.455 2023-05-17 17:41:40+00 kentd Exp $";
+const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.457 2023-05-22 17:16:14+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -70,7 +70,7 @@ extern int g_audio_enable;
 extern int g_preferred_rate;
 
 int	g_a2_fatal_err = 0;
-dword64	g_dcycles_end = 0.0;
+dword64	g_dcycles_end = 0;
 int	g_fcycles_end_for_event = 0;
 int	g_halt_sim = 0;
 int	g_rom_version = -1;
@@ -88,7 +88,7 @@ int	g_serial_out_masking = 0;
 int	g_serial_modem[2] = { 0, 1 };
 
 int	g_config_iwm_vbl_count = 0;
-const char g_kegs_version_str[] = "1.24";
+const char g_kegs_version_str[] = "1.26";
 
 dword64	g_last_vbl_dfcyc = 0;
 dword64	g_cur_dfcyc = 1;
@@ -223,7 +223,8 @@ toolbox_debug_c(word32 xreg, word32 stack, dword64 *dcyc_ptr)
 	pos = g_toolbox_log_pos;
 
 	stack += 9;
-	g_toolbox_log_array[pos][0] = g_last_vbl_dfcyc + *dcyc_ptr;
+	g_toolbox_log_array[pos][0] = (word32)
+					((g_last_vbl_dfcyc + *dcyc_ptr) >> 16);
 	g_toolbox_log_array[pos][1] = stack+1;
 	g_toolbox_log_array[pos][2] = xreg;
 	g_toolbox_log_array[pos][3] = toolbox_debug_4byte(stack+1);
@@ -1086,14 +1087,15 @@ setup_zip_speeds()
 		fmhz = fmhz * 1.19;
 	}
 #endif
-	drecip = 65536 / fmhz;
+	drecip = (dword64)(65536 / fmhz);
 	g_zip_pmhz = fmhz;
 	g_recip_projected_pmhz_zip.dplus_1 = drecip;
 	if(fmhz <= 2.0) {
-		g_recip_projected_pmhz_zip.dplus_x_minus_1 = 1.01 * 65536;
+		g_recip_projected_pmhz_zip.dplus_x_minus_1 =
+						(dword64)(1.01 * 65536);
 	} else {
-		g_recip_projected_pmhz_zip.dplus_x_minus_1 = 1.01 * 65536 -
-								drecip;
+		g_recip_projected_pmhz_zip.dplus_x_minus_1 =
+					(dword64)(1.01 * 65536 - drecip);
 	}
 }
 
@@ -1161,11 +1163,11 @@ run_a2_one_vbl()
 	g_cur_sim_dtime = 0.0;
 
 	g_recip_projected_pmhz_slow.dplus_1 = 0x10000;
-	g_recip_projected_pmhz_slow.dplus_x_minus_1 = 0.9 * 0x10000;
+	g_recip_projected_pmhz_slow.dplus_x_minus_1 = (dword64)(0.9 * 0x10000);
 
-	g_recip_projected_pmhz_fast.dplus_1 = (0x10000 / 2.8);
-	g_recip_projected_pmhz_fast.dplus_x_minus_1 = (1.98 - (1.0/2.8)) *
-						0x10000;
+	g_recip_projected_pmhz_fast.dplus_1 = (dword64)(0x10000 / 2.8);
+	g_recip_projected_pmhz_fast.dplus_x_minus_1 = (dword64)
+				((1.98 - (1.0/2.8)) * 0x10000);
 
 	zip_speed_0tof = g_zipgs_reg_c05a & 0xf0;
 	setup_zip_speeds();
@@ -1689,9 +1691,10 @@ update_60hz(dword64 dfcyc, double dtime_now)
 	recip_predicted_pmhz = 1.0/predicted_pmhz;
 	g_projected_pmhz = predicted_pmhz;
 
-	g_recip_projected_pmhz_unl.dplus_1 = 65536*recip_predicted_pmhz;
+	g_recip_projected_pmhz_unl.dplus_1 = (dword64)
+						(65536 * recip_predicted_pmhz);
 	g_recip_projected_pmhz_unl.dplus_x_minus_1 =
-			65536 * (1.01 - recip_predicted_pmhz);
+			(dword64)(65536 * (1.01 - recip_predicted_pmhz));
 
 	if(dtime_till_expected < -0.125) {
 		/* If we were way off, get back on track */
@@ -1850,7 +1853,7 @@ check_scan_line_int(int cur_video_line)
 		}
 		if(g_slow_memory_ptr[0x19d00+i] & 0x40) {
 			irq_printf("Adding scan_int for line %d\n", i);
-			delay = (DCYCS_IN_16MS/262.0) * ((double)line);
+			delay = 65 * line;
 			add_event_entry(g_last_vbl_dfcyc + delay, EV_SCAN_INT +
 					(line << 8));
 			g_scan_int_events = 1;
@@ -2019,10 +2022,16 @@ must_write(int fd, byte *bufptr, dword64 dsize)
 {
 	dword64	dlen;
 	long long ret;
+	word32	this_len;
 
 	dlen = dsize;
 	while(dlen != 0) {
-		ret = write(fd, bufptr, dlen);
+		// Support Windows64, which can only rd/wr 2GB max per call
+		this_len = (1UL << 30);
+		if(dlen < this_len) {
+			this_len = (word32)dlen;
+		}
+		ret = write(fd, bufptr, this_len);
 		if(ret >= 0) {
 			dlen -= ret;
 			bufptr += ret;
@@ -2056,5 +2065,15 @@ kegs_malloc_str(const char *in_str)
 	memcpy(str, in_str, len);
 
 	return str;
+}
+
+dword64
+kegs_lseek(int fd, dword64 offs, int whence)
+{
+#ifdef _WIN32
+	return _lseeki64(fd, offs, whence);
+#else
+	return lseek(fd, offs, whence);
+#endif
 }
 

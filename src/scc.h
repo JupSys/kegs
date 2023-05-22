@@ -1,5 +1,5 @@
 #ifdef INCLUDE_RCSID_C
-const char rcsid_scc_h[] = "@(#)$KmKId: scc.h,v 1.22 2023-05-04 19:32:06+00 kentd Exp $";
+const char rcsid_scc_h[] = "@(#)$KmKId: scc.h,v 1.23 2023-05-19 13:59:31+00 kentd Exp $";
 #endif
 
 /************************************************************************/
@@ -39,8 +39,10 @@ const char rcsid_scc_h[] = "@(#)$KmKId: scc.h,v 1.22 2023-05-04 19:32:06+00 kent
 
 #define SCC_MODEM_MAX_CMD_STR	128
 
-#ifndef SOCKET
-# define SOCKET		word32		/* for non-windows */
+#ifndef _WIN32
+# define SOCKET			int		/* For non-Windows */
+# define INVALID_SOCKET		(-1)		/* For non-Windows */
+# define closesocket(s)		close(s)
 #endif
 
 STRUCT(Scc) {
@@ -49,7 +51,7 @@ STRUCT(Scc) {
 	int	accfd;
 	SOCKET	sockfd;
 	int	socket_state;
-	int	rdwrfd;
+	SOCKET	rdwrfd;
 	void	*host_handle;
 	void	*host_handle2;
 	int	host_aux1;

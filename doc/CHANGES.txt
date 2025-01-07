@@ -1,7 +1,15 @@
 
+Changes in KEGS v1.35 since v1.34 (01/07/25)
+- Fix handling of .zip files, it somehow got broken so subdirectories in
+	zip files weren't selectable.
+- DCD fixes for the virtual modem, and fix CONNECT terse response code to
+	try to support the Warp6 BBS.
+
+
 Changes in KEGS v1.34 since v1.33 (01/15/24)
 - Fix bug where no config.kegs file could sometimes cause a crash.
-- Richard Bennett fixes:  Change menus to be retina, and add About dialog 
+- Richard Bennett fixes:  Change menus to be retina, and add About dialog on
+	a Mac
 - Save the main window size and position in config.kegs (but not automatically)
 
 

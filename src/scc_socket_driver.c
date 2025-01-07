@@ -1,8 +1,8 @@
-const char rcsid_scc_socket_driver_c[] = "@(#)$KmKId: scc_socket_driver.c,v 1.29 2023-09-21 00:12:49+00 kentd Exp $";
+const char rcsid_scc_socket_driver_c[] = "@(#)$KmKId: scc_socket_driver.c,v 1.31 2025-01-07 16:45:35+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2023 by Kent Dickey		*/
+/*			Copyright 2002-2025 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -89,6 +89,7 @@ scc_socket_open(dword64 dfcyc, int port, int cfg)
 	}
 	if(cfg == 1) {
 		scc_ptr->modem_state = 1;
+		scc_ptr->dcd = 0;
 		scc_socket_open_incoming(dfcyc, port);
 	} else if(cfg == 3) {
 		scc_ptr->modem_state = 0;
@@ -123,6 +124,7 @@ scc_socket_close(int port)
 	scc_ptr->modem_state = 0;
 	if(scc_ptr->cur_state == 1) {			// Virtual modem
 		scc_ptr->modem_state = 1;
+		scc_ptr->dcd = 0;
 	}
 	scc_ptr->modem_cmd_len = 0;
 	scc_ptr->telnet_mode = 0;
@@ -135,9 +137,6 @@ scc_socket_close(int port)
 	}
 	scc_ptr->rdwrfd = INVALID_SOCKET;
 	scc_ptr->sockfd = INVALID_SOCKET;
-	if(port == 1) {
-		scc_ptr->dcd = 1;
-	}
 	scc_ptr->socket_num_rings = 0;
 #endif
 }
@@ -441,11 +440,14 @@ scc_accept_socket(dword64 dfcyc, int port)
 		/* and send some telnet codes */
 		scc_ptr->telnet_reqwill_mode[0] = 0xa;	/* 3=GO_AH and 1=ECHO */
 		scc_ptr->telnet_reqdo_mode[0] = 0xa;	/* 3=GO_AH and 1=ECHO */
-# if 0
+# if 1
 		scc_ptr->telnet_reqdo_mode[1] = 0x4;	/* 34=LINEMODE */
 # endif
-		printf("Telnet reqwill and reqdo's initialized: %08x %08x\n",
+		printf("Telnet reqwill and reqdo's initialized: %08x_%08x,"
+				"%08x_%08x\n",
+				scc_ptr->telnet_reqwill_mode[1],
 				scc_ptr->telnet_reqwill_mode[0],
+				scc_ptr->telnet_reqdo_mode[1],
 				scc_ptr->telnet_reqdo_mode[0]);
 
 		scc_socket_modem_do_ring(dfcyc, port);
@@ -459,8 +461,6 @@ scc_socket_telnet_reqs(dword64 dfcyc, int port)
 	Scc	*scc_ptr;
 	word32	mask, willmask, domask;
 	int	i, j;
-
-	return;
 
 	scc_ptr = &(g_scc[port]);
 	for(i = 0; i < 64; i++) {
@@ -1107,10 +1107,15 @@ scc_socket_send_modem_code(dword64 dfcyc, int port, int code)
 	case 3: str = "NO CARRIER"; break;
 	case 4: str = "ERROR"; break;
 	case 5: str = "CONNECT 1200"; break;
-	case 13: str = "CONNECT 9600"; break;
-	case 16: str = "CONNECT 19200"; break;
-	case 25: str = "CONNECT 14400"; break;
-	case 85: str = "CONNECT 19200"; break;
+	case 10: str = "CONNECT 2400"; break;
+	case 12: str = "CONNECT 9600"; break;	// Generic AT docs/Warp6 BBS
+	case 13: str = "CONNECT 9600"; break;	// US Robotics Sportster
+	case 14: str = "CONNECT 19200"; break;	// Warp6 BBS
+	case 16: str = "CONNECT 19200"; break;	// Generic AT docs
+	case 25: str = "CONNECT 14400"; break;	// US Robotics Sportster
+	case 85: str = "CONNECT 19200"; break;	// US Robotics Sportster
+	case 18: str = "CONNECT 57600"; break;	// Generic AT docs/Warp6 BBS
+	case 28: str = "CONNECT 38400"; break;	// Warp6 BBS
 	default:
 		str = "ERROR";
 	}
@@ -1132,7 +1137,7 @@ scc_socket_modem_connect(dword64 dfcyc, int port)
 {
 	/* decide which code to send.  Default to 1 if needed */
 	if(g_scc[port].cur_state == 1) {		// Virtual modem
-		scc_socket_send_modem_code(dfcyc, port, 13);	/*13=9600*/
+		scc_socket_send_modem_code(dfcyc, port, 28);	/*28=38400*/
 	}
 }
 

@@ -1,8 +1,8 @@
-const char rcsid_video_c[] = "@(#)$KmKId: video.c,v 1.210 2024-01-15 02:57:49+00 kentd Exp $";
+const char rcsid_video_c[] = "@(#)$KmKId: video.c,v 1.211 2024-09-15 13:56:12+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2023 by Kent Dickey		*/
+/*			Copyright 2002-2024 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/

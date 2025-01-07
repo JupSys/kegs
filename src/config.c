@@ -1,8 +1,8 @@
-const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.162 2024-01-15 02:55:41+00 kentd Exp $";
+const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.166 2025-01-07 16:45:35+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2023 by Kent Dickey		*/
+/*			Copyright 2002-2025 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -436,12 +436,12 @@ byte g_rom_c600_rom01_diffs[256] = {
 };
 
 byte g_rom_c700[256] = {
-	0xa2, 0x20, 0xa2, 0x00, 0xa2, 0x03, 0xc9, 0x00,
-	//^^= LDX #$20; LDY #$00, LDX #$03  CMP #$00
-	0xb0, 0x0c, 0x18, 0xb8, 0x70, 0x38, 0xb8, 0x42,
-	//^^= BCS $c716; CLC; CLV; BVS $c746 (SEC); CLV; WDM $c7,$00
-	0xc7, 0x00, 0x60, 0x00, 0x00, 0xea, 0xe2, 0x40,
-	//^^=  ...; RTS..............; NOP; SEP #$40
+	0xa2, 0x20, 0xa2, 0x00, 0xa2, 0x03, 0xc9, 0x3c,
+	//^^= LDX #$20; LDY #$00, LDX #$03  CMP #$3c
+	0x80, 0x0c, 0x18, 0xb8, 0x70, 0x38, 0xb8, 0x42,
+	//^^= BRA $c716; CLC; CLV; BVS $c746 (SEC); CLV; WDM $c7,$00
+	0xc7, 0x00, 0x60, 0x00, 0x00, 0xea, 0xe2, 0x41,
+	//^^=  ...; RTS..............; NOP; SEP #$41
 	0x70, 0xf5, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	//^^= BVS $c70f
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1312,7 +1312,7 @@ config_parse_config_kegs_file()
 	}
 
 	// In any case, copy the current directory path to g_cfg_cwd_str
-	(void)getcwd(&g_cfg_cwd_str[0], CFG_PATH_MAX);
+	(void)!getcwd(&g_cfg_cwd_str[0], CFG_PATH_MAX);
 	printf("CWD is now: %s\n", &g_cfg_cwd_str[0]);
 
 	fd = open(g_config_kegs_name, O_RDONLY | O_BINARY);
@@ -2593,7 +2593,7 @@ config_file_to_pipe(Disk *dsk, const char *cmd_ptr, const char *name_ptr)
 		}
 		// Now just run the command.  Input is from name_ptr, output is
 		//  to a pipe
-		system(cmd_ptr);
+		(void)!system(cmd_ptr);
 		exit(0);
 	} else if(pid > 0) {
 		// Parent.  Collect output from output_pipe[0], and write it
@@ -3472,11 +3472,12 @@ cfg_file_add_dirent(Cfg_listhdr *listhdrptr, const char *nameptr, int is_dir,
 	}
 	ptr = malloc(namelen+1+is_dir);
 	cfg_strncpy(ptr, nameptr, namelen+1);
-	if(is_dir) {
+	if(is_dir && (namelen >= 1) && (ptr[namelen - 1] != '/')) {
+		// Add a trailing '/' to directories, unless already there
 		cfg_strlcat(ptr, "/", namelen + 1 + is_dir);
 	}
 #if 0
-	printf("...file entry %d is %s\n", g_cfg_dirlist.last, ptr);
+	printf("...file entry %d is %s\n", listhdrptr->last, ptr);
 #endif
 	direntptr = &(listhdrptr->direntptr[listhdrptr->last]);
 	direntptr->name = ptr;

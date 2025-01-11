@@ -1,4 +1,4 @@
-const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.166 2025-01-07 16:45:35+00 kentd Exp $";
+const char rcsid_config_c[] = "@(#)$KmKId: config.c,v 1.168 2025-01-11 18:30:00+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -52,6 +52,10 @@ int g_serial_remote_port[2] = { 9100, 9100 };
 char *g_serial_device[2] = { "/dev/tty.USB.0", "/dev/tty.USB.1" };
 				// cfg_init_menus() will malloc() the above
 int g_serial_win_device[2] = { 0, 0 };		// Disabled
+int g_serial_modem_response_code = 10;		// 10 - 2400
+int g_serial_modem_allow_incoming = 0;		// 1 for BBS'es
+int g_serial_modem_init_telnet = 1;		// 1 for BBS'es
+
 extern word32 g_mem_size_base;
 extern word32 g_mem_size_exp;
 extern int g_video_line_update_interval;
@@ -307,6 +311,25 @@ Cfg_menu g_cfg_serial_menu[] = {
 { 0, 0, 0, 0, 0 },
 };
 
+Cfg_menu g_cfg_modem_menu[] = {
+{ "Virtual Modem Configuration", g_cfg_modem_menu, 0, 0, CFGTYPE_MENU },
+{ "Modem Speed Response Code          ,5,5 - CONNECT 1200,10,10 - CONNECT 2400,"
+		"12,12 - CONNECT 9600 (HAYES/Warp6),"
+		"13,13 - CONNECT 9600 (USR/HST),"
+		"14,14 - CONNECT 19200 (HAYES/Warp6),"
+		"28,28 - CONNECT 38400 (HAYES/Warp6)",
+		KNMP(g_serial_modem_response_code), CFGTYPE_INT },
+{ "Allow Modem incoming on 6501/6502  ,0,Outgoing only,1,Incoming/outgoing BBS",
+		KNMP(g_serial_modem_allow_incoming), CFGTYPE_INT },
+{ "Send Telnet Escape codes           ,0,Disable Telnet,1,Send Telnet codes",
+		KNMP(g_serial_modem_init_telnet), CFGTYPE_INT },
+{ "", 0, 0, 0, 0 },
+{ "Back to Main Config", g_cfg_main_menu, 0, 0, CFGTYPE_MENU },
+{ 0, 0, 0, 0, 0 },
+};
+
+
+
 Cfg_menu g_cfg_video_menu[] = {
 { "Force X-windows display depth", KNMP(g_force_depth), CFGTYPE_INT },
 { "Enable VOC,0,Disabled,1,Enabled", KNMP(g_voc_enable), CFGTYPE_INT },
@@ -330,6 +353,7 @@ Cfg_menu g_cfg_main_menu[] = {
 { "ROM File Selection", g_cfg_rom_menu, 0, 0, CFGTYPE_MENU },
 { "Character ROM Selection", g_cfg_charrom_menu, 0, 0, CFGTYPE_MENU },
 { "Serial Port Configuration", g_cfg_serial_menu, 0, 0, CFGTYPE_MENU },
+{ "Virtual Modem Configuration", g_cfg_modem_menu, 0, 0, CFGTYPE_MENU },
 { "Video Settings", g_cfg_video_menu, 0, 0, CFGTYPE_MENU },
 { "Auto-update config.kegs,0,Manual,1,Immediately",
 		KNMP(g_config_kegs_auto_update), CFGTYPE_INT },
@@ -436,7 +460,8 @@ byte g_rom_c600_rom01_diffs[256] = {
 };
 
 byte g_rom_c700[256] = {
-	0xa2, 0x20, 0xa2, 0x00, 0xa2, 0x03, 0xc9, 0x3c,
+	//0xa2, 0x20, 0xa2, 0x00, 0xa2, 0x03, 0xc9, 0x3c,	// For Apple //e
+	0xa2, 0x20, 0xa2, 0x00, 0xa2, 0x03, 0xc9, 0x00,
 	//^^= LDX #$20; LDY #$00, LDX #$03  CMP #$3c
 	0x80, 0x0c, 0x18, 0xb8, 0x70, 0x38, 0xb8, 0x42,
 	//^^= BRA $c716; CLC; CLV; BVS $c746 (SEC); CLV; WDM $c7,$00

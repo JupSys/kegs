@@ -1,8 +1,8 @@
-const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.486 2024-09-15 13:56:41+00 kentd Exp $";
+const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.489 2025-01-11 23:12:16+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
-/*			Copyright 2002-2024 by Kent Dickey		*/
+/*			Copyright 2002-2025 by Kent Dickey		*/
 /*									*/
 /*	This code is covered by the GNU GPL v3				*/
 /*	See the file COPYING.txt or https://www.gnu.org/licenses/	*/
@@ -81,7 +81,7 @@ int	g_code_yellow = 0;
 int	g_emul_6502_ind_page_cross_bug = 0;
 
 int	g_config_iwm_vbl_count = 0;
-const char g_kegs_version_str[] = "1.35";
+const char g_kegs_version_str[] = "1.37";
 
 dword64	g_last_vbl_dfcyc = 0;
 dword64	g_cur_dfcyc = 1;

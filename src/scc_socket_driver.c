@@ -1,4 +1,4 @@
-const char rcsid_scc_socket_driver_c[] = "@(#)$KmKId: scc_socket_driver.c,v 1.35 2025-01-11 22:42:59+00 kentd Exp $";
+const char rcsid_scc_socket_driver_c[] = "@(#)$KmKId: scc_socket_driver.c,v 1.37 2025-04-29 22:17:38+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -16,6 +16,7 @@ const char rcsid_scc_socket_driver_c[] = "@(#)$KmKId: scc_socket_driver.c,v 1.35
 // Win32: see: https://learn.microsoft.com/en-us/windows/win32/api/winsock2/
 
 // Modem init string GBBS GSPORT.HST: ats0=1s2=128v0
+// Modem init string Warp6: atm0e0v0s0=0s7=25   atx4h0  at&c1&d2
 
 #include "defc.h"
 
@@ -790,6 +791,7 @@ scc_socket_empty_writebuf(dword64 dfcyc, int port)
 			len = 1;
 			scc_socket_modem_write(dfcyc, port,
 						scc_ptr->out_buf[rdptr]);
+			scc_ptr->write_called_this_vbl = 0;
 			ret = 1;
 		} else {
 			if(rdwrfd == INVALID_SOCKET) {
@@ -887,7 +889,7 @@ scc_socket_modem_write(dword64 dfcyc, int port, int c)
 	len = scc_ptr->modem_cmd_len;
 	got_at = 0;
 #if 0
-	printf("M[%d][%d]: %02x\n", port, len, c);
+	printf("T:%016llx M[%d][%d]: %02x\n", dfcyc, port, len, c);
 #endif
 	if(len >= 2 && str[0] == 'a' && str[1] == 't') {
 		/* we've got an 'at', do not back up past it */

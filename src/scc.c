@@ -1,4 +1,4 @@
-const char rcsid_scc_c[] = "@(#)$KmKId: scc.c,v 1.73 2025-01-11 18:45:06+00 kentd Exp $";
+const char rcsid_scc_c[] = "@(#)$KmKId: scc.c,v 1.74 2025-04-29 22:17:05+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -583,6 +583,7 @@ scc_do_event(dword64 dfcyc, int type)
 	} else if(type == SCC_RX_EVENT) {
 		scc_ptr->rx_event_pending = 0;
 		scc_maybe_rx_event(dfcyc, port);
+		scc_maybe_rx_int(port);
 	} else {
 		halt_printf("scc_do_event: %08x!\n", type);
 	}
@@ -1185,7 +1186,7 @@ scc_maybe_rx_int(int port)
 		return;
 	}
 	rx_int_mode = (scc_ptr->reg[1] >> 3) & 0x3;
-	if(rx_int_mode == 1 || rx_int_mode == 2) {
+	if((rx_int_mode == 1) || (rx_int_mode == 2)) {
 		scc_ptr->wantint_rx = 1;
 	}
 	scc_evaluate_ints(port);
@@ -1227,6 +1228,7 @@ scc_maybe_tx_event(dword64 dfcyc, int port)
 		scc_ptr->tx_buf_empty = 0;
 	} else {
 		/* nothing pending, see ints on */
+		scc_ptr->tx_buf_empty = 0;
 		scc_evaluate_ints(port);
 		tx_dcycs = scc_ptr->tx_dcycs;
 		scc_ptr->tx_event_pending = 1;
@@ -1295,6 +1297,7 @@ scc_add_to_readbuf(dword64 dfcyc, int port, word32 val)
 	}
 
 	scc_maybe_rx_event(dfcyc, port);
+	scc_maybe_rx_int(port);
 }
 
 void

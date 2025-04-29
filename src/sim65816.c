@@ -1,4 +1,4 @@
-const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.489 2025-01-11 23:12:16+00 kentd Exp $";
+const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.491 2025-04-27 18:03:43+00 kentd Exp $";
 
 /************************************************************************/
 /*			KEGS: Apple //gs Emulator			*/
@@ -81,7 +81,7 @@ int	g_code_yellow = 0;
 int	g_emul_6502_ind_page_cross_bug = 0;
 
 int	g_config_iwm_vbl_count = 0;
-const char g_kegs_version_str[] = "1.37";
+const char g_kegs_version_str[] = "1.38";
 
 dword64	g_last_vbl_dfcyc = 0;
 dword64	g_cur_dfcyc = 1;
@@ -415,6 +415,8 @@ do_reset()
 	change_display_mode(g_cur_dfcyc);
 
 	g_irq_pending = 0;
+	g_code_yellow = 0;
+	g_code_red = 0;
 
 	engine.kpc = get_memory16_c(0x00fffc);
 
